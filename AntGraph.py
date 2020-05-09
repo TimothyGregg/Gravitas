@@ -4,6 +4,8 @@ import statistics
 
 
 class AntGraph(Graph):
+	method = "Voronoi"
+
 	def __init__(self, size_x: int, size_y: int, node_radius: float):
 		# Graph super constructor
 		super().__init__()
@@ -14,31 +16,35 @@ class AntGraph(Graph):
 		self.node_radius = node_radius
 		self.edge_lengths = []
 
-		# Grab all the points for the graph from a Poisson-Disc point generator
+		self.add_nodes()
+
+		self.add_edges()
+
+	# Grab all the points for the graph from a Poisson-Disc point generator
+	def add_nodes(self):
 		all_points = []
 		while len(all_points) < 4:  # 4 is the minimum for Delaunay Triangulation
 			all_points = Toolbox.PoissonGenerator(self.size_x, self.size_y, self.node_radius * 2).get_all_points()
 		for point_tuple in all_points:
 			self.add_node(point_tuple)
 
-		# Generate and create edges
-		edge_dict = self.generate_delauney_edges()
+	def add_edges(self):
+		# Generate the Delauney edges using the Voronoi method and connect them
+		edge_dict = self.get_voronoi_diagram_ridge_lines()
 		for node1_uid in edge_dict:
 			for node2_uid in edge_dict[node1_uid]:
-				if not self.connected(node1_uid, node2_uid):
-					new_edge_uid = self.connect_nodes(self.nodes[node1_uid], self.nodes[node2_uid])
-					self.edge_lengths.append(self.edges[new_edge_uid].length)
+				new_edge_uid = self.connect_nodes(self.nodes[node1_uid], self.nodes[node2_uid])
+				self.edge_lengths.append(self.edges[new_edge_uid].length)
 
 		# Cull edges that are too long (typically along the edges, with crazy-big circles
+		# TODO this may be able to be rolled in to part of the computation of the Voronoi regions (i.e. the regions
+		#  that extent to infinity are probably those with long edges spanning the exterior of the graph)
 		average = sum(self.edge_lengths) / len(self.edge_lengths)
 		st_dev = statistics.stdev(self.edge_lengths)
 		all_edge_keys = list(self.edges.keys())
 		for edge_uid in all_edge_keys:
 			if self.edges[edge_uid].length > average + st_dev:
 				self.disconnect_edge(edge_uid)
-
-		# Print the graph-able text to the console.
-		# self.desmos_dump()
 
 	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
 	def desmos_dump(self):

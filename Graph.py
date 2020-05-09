@@ -2,7 +2,7 @@ from Edge import *
 from Node import *
 from typing import Tuple
 import numpy
-from scipy.spatial import Delaunay
+from scipy.spatial import Voronoi
 
 
 class Graph:
@@ -45,58 +45,35 @@ class Graph:
         else:
             raise RuntimeError("You goofed on the key for an Edge removal.")
 
-    # Return a list of tuples with each node position
+    # Return a tuple of (list of UIDs corresponding to..., list of tuples with each node position)
     def get_node_position_list(self):
+        node_uid_list = []
         node_position_list = []
         for node_uid in self.nodes:
+            node_uid_list.append(node_uid)
             node_position_list.append((self.nodes[node_uid].x, self.nodes[node_uid].y))
-        return node_position_list
+        return {"UIDs": node_uid_list, "Positions": node_position_list}
 
     # Checks if the second node is in the list of connected nodes for the first node. Should work either direction.
     # Maybe make this check for errors? I dunno. If you get this far and it's messed up, you've goofed.
     def connected(self, node1_uid: int, node2_uid: int):
         return node2_uid in self.node_edges[node1_uid]
 
-    # Generates a dict of the Delauney edges of the graph. This dict has keys equal to a Node's uid and the value is a
-    # list of other Node uids that the key node is connected to
-    def generate_delauney_edges(self):
-        # Generate the Delauney triangles
-        triangles = Delaunay(numpy.array(self.get_node_position_list()))
+    def get_voronoi_diagram_ridge_lines(self):
+        # Someone else does all the fancy math for me
+        node_position_dict = self.get_node_position_list()
+        voronoi = Voronoi(numpy.array(node_position_dict["Positions"]))
 
         # Storage variable
         node_connections = {}
         for node_uid in self.nodes:
             node_connections[self.nodes[node_uid].uid] = []  # Seems redundant, but I just want to be safe here
-        # Turn the Delauney triangles into edges for the graph
-        for tri in triangles.simplices:
-            # Grab each node in the triangle
-            try:
-                node1 = self.nodes[tri[0]]
-                node2 = self.nodes[tri[1]]
-                node3 = self.nodes[tri[2]]
-            except KeyError:
-                print("tri[0]: " + str(tri[0]) + "\ntri[1]: " + str(tri[1]) + "\ntri[2]: " + str(tri[2]))
-                print(self.nodes.keys())
-                raise RuntimeError("This goofed.")
 
-            # Nodes 2 and 3 should be connected to node 1
-            if node2.uid not in node_connections[node1.uid]:
-                node_connections[node1.uid].append(node2.uid)
-            if node3.uid not in node_connections[node1.uid]:
-                node_connections[node1.uid].append(node3.uid)
+        # Dump the ridge points array into the same format as used in the Delaunay case
+        for pair in voronoi.ridge_points:
+            # Use the UIDs from the node_position_dict just in case UIDs got scrambled and aren't in order
+            node_connections[node_position_dict["UIDs"][pair[0]]].append(node_position_dict["UIDs"][pair[1]])
 
-            # Nodes 1 and 3 should be connected to node 2
-            if node1.uid not in node_connections[node2.uid]:
-                node_connections[node2.uid].append(node1.uid)
-            if node3.uid not in node_connections[node2.uid]:
-                node_connections[node2.uid].append(node3.uid)
-
-            # Nodes 1 and 2 should be connected to node 3
-            if node1.uid not in node_connections[node3.uid]:
-                node_connections[node3.uid].append(node1.uid)
-            if node2.uid not in node_connections[node3.uid]:
-                node_connections[node3.uid].append(node2.uid)
-
-        # This is a dict, where each key is the uid of a node, and each value is a list of all nodes' uids that are
-        # connected to that node
+        # This **ISN'T** twice as large as the set of all connections. It contains only one element of each list in each
+        # key for each connection.
         return node_connections

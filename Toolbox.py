@@ -11,7 +11,7 @@ def node_distance(node1, node2):
 # Inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
 class PoissonGenerator:
     # Number of tries before a spawn point is removed from the spawn_points list
-    spawn_tries = 10
+    spawn_tries = 2
 
     def __init__(self, size_x: int, size_y: int, node_radius: float):
         # General size variables
