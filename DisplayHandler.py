@@ -20,11 +20,7 @@ def run(window: pygame.Surface, node_radius: int):
 	size_x = window.get_width()
 	size_y = window.get_height()
 	board = AntGraph(size_x, size_y, node_radius)
-	window.fill((43, 43, 43))
-	for node in board.nodes:
-		pygame.gfxdraw.circle(window, node.x, node.y, node_radius, (187, 187, 187))
-		pygame.gfxdraw.circle(window, node.x, node.y, 5, (187, 187, 187))
-	pygame.display.flip()  # Update the whole window
+	display(window, board)
 	while True:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -34,12 +30,24 @@ def run(window: pygame.Surface, node_radius: int):
 					return
 				else:
 					# TODO Throw a "Generating..." splash here
-					board = AntGraph(size_x, size_y, node_radius)
-					window.fill((43, 43, 43))
-					for node in board.nodes:
-						pygame.gfxdraw.circle(window, node.x, node.y, node_radius, (187, 187, 187))
-						pygame.gfxdraw.circle(window, node.x, node.y, 5, (187, 187, 187))
-					pygame.display.flip()  # Update the whole window
+					show_new_board(window, board)
 
 
-display_test(display_x=1920, display_y=1080, node_radius=20)
+def show_new_board(window, board: AntGraph):
+	board = AntGraph(board.size_x, board.size_y, board.node_radius)
+	display(window, board)
+
+
+def display(window: pygame.Surface, board: AntGraph):
+	window.fill((43, 43, 43))
+	for node_uid in board.nodes:
+		node = board.nodes[node_uid]
+		pygame.gfxdraw.circle(window, node.x, node.y, board.node_radius, (187, 187, 187))
+		pygame.gfxdraw.circle(window, node.x, node.y, 5, (187, 187, 187))
+	for edge_uid in board.edges:
+		edge = board.edges[edge_uid]
+		pygame.gfxdraw.line(window, edge.n1.x, edge.n1.y, edge.n2.x, edge.n2.y, (187, 187, 0))
+	pygame.display.flip()  # Update the whole window
+
+
+display_test(display_x=1920, display_y=1080, node_radius=10)
