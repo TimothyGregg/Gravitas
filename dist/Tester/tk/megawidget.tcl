@@ -75,9 +75,7 @@ package require Tk 8.6
     #	with the actual values removed). It also assumes that the 'options'
     #	array in the class holds all options; it is up to subclasses to set
     #	traces on that array if they want to respond to configuration changes.
-    #
-    #	TODO: allow unambiguous abbreviations.
-    #
+
     method configure args {
 	# Configure behaves differently depending on the number of arguments
 	set argc [llength $args]
@@ -147,8 +145,6 @@ package require Tk 8.6
     #	This method assumes that the 'options' array in the class holds all
     #	options; it is up to subclasses to set traces on that array if they
     #	want to respond to configuration reads.
-    #
-    #	TODO: allow unambiguous abbreviations.
     #
     method cget option {
 	return $options($option)

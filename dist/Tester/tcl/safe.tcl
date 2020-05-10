@@ -106,7 +106,6 @@ proc ::safe::CheckInterp {slave} {
 # between the way we store the configuration values in safe::interp's and
 # the Opt package. Obviously we would like an OptConfigure to avoid
 # duplicating all this code everywhere.
-# -> TODO (the app should share or access easily the program/value stored
 # by opt)
 
 # This is even more complicated by the boolean flags with no values that

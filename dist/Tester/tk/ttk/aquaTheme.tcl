@@ -58,7 +58,5 @@ namespace eval ttk::theme::aqua {
 	#
 	ttk::style configure TLabelframe \
 		-labeloutside true -labelmargins {14 0 14 4}
-
-	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }
 }

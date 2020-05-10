@@ -435,9 +435,6 @@ proc ttk::entry::Release {w} {
 #	depending on where the mouse left the window, and extend
 #	the selection according to the current selection mode.
 #
-# TODO: AutoScroll should repeat faster (50ms) than normal autorepeat.
-# TODO: Need a way for Repeat scripts to cancel themselves.
-#
 proc ttk::entry::AutoScroll {w} {
     variable State
     if {![winfo exists $w]} return

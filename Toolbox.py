@@ -10,10 +10,10 @@ def node_distance(node1, node2):
 
 # Inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
 class PoissonGenerator:
-    # Number of tries before a spawn point is removed from the spawn_points list
-    spawn_tries = 2
 
-    def __init__(self, size_x: int, size_y: int, node_radius: float):
+    def __init__(self, size_x: int, size_y: int, node_radius: float, spawn_tries: int = 4):
+        # Number of tries before a spawn point is removed from the spawn_points list
+        self.spawn_tries = spawn_tries
         # General size variables
         self.size_x = size_x            # Size of the graph in the x-dimension
         self.size_y = size_y            # Size of the graph in the y-dimension
@@ -45,8 +45,10 @@ class PoissonGenerator:
     def generate_point(self):
         # If the points_vector list is empty, the board has not been seeded yet.
         if not self.points_vector:
-            # Add (x, y) tuple at center to points_vector
-            self.points_vector.append((int(self.size_x / 2), int(self.size_y / 2)))
+            # Add (x, y) tuple within the middle third to points_vector
+            start_x = random.randint(int(self.size_x / 3), int(2 * self.size_x / 3))
+            start_y = random.randint(int(self.size_y / 3), int(2 * self.size_y / 3))
+            self.points_vector.append((start_x, start_y))
             # Index 0 of points_vector is a viable spawn point
             self.spawn_points.append(0)
             # Place a marker in the grid for the seeded point
@@ -66,7 +68,7 @@ class PoissonGenerator:
 
         # We will try to find a valid point as many times as we choose, then if no good point was found, remove that
         # point from spawn_points
-        for it in range(PoissonGenerator.spawn_tries):
+        for it in range(self.spawn_tries):
             # Generate new point first in polar coordinates, then convert to rectangular
             radius = self.node_radius * (1 + math.sqrt(random.random()))    # Distance in polar coordinates. This is
             # specifically written to generate numbers that are evenly distributed through the area of the circle

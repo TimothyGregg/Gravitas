@@ -1,10 +1,11 @@
 from Graph import *
 import Toolbox
+import random
 import statistics
 
 
 class AntGraph(Graph):
-	method = "Voronoi"
+	sparcity = 0.1
 
 	def __init__(self, size_x: int, size_y: int, node_radius: float):
 		# Graph super constructor
@@ -17,7 +18,6 @@ class AntGraph(Graph):
 		self.edge_lengths = []
 
 		self.add_nodes()
-
 		self.add_edges()
 
 	# Grab all the points for the graph from a Poisson-Disc point generator
@@ -44,6 +44,25 @@ class AntGraph(Graph):
 		all_edge_keys = list(self.edges.keys())
 		for edge_uid in all_edge_keys:
 			if self.edges[edge_uid].length > average + st_dev:
+				self.disconnect_edge(edge_uid)
+
+		# remove random edges to generate edge sparcity
+		all_edge_keys = list(self.edges.keys())
+		to_remove = []
+		for edge_uid in all_edge_keys:
+			# Ignore the potential to remove an edge if the edge is the only edge connecting that node
+			n1_uid = self.edges[edge_uid].n1.uid
+			n2_uid = self.edges[edge_uid].n2.uid
+			if len(self.adjacency_list[n1_uid]) < 2:
+				continue
+			if len(self.adjacency_list[n2_uid]) < 2:
+				continue
+
+			# Randomly remove edges based on sparcity
+			if random.random() > AntGraph.sparcity:
+				to_remove.append(edge_uid)
+		for edge_uid in to_remove:
+			if not self.is_bridge(edge_uid):
 				self.disconnect_edge(edge_uid)
 
 	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing

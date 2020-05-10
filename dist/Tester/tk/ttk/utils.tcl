@@ -212,7 +212,6 @@ proc ttk::releaseGrab {w} {
 # NOTE: repeating widgets do not have -repeatdelay
 # or -repeatinterval resources as in standard Tk;
 # instead a single set of settings is applied application-wide.
-# (TODO: make this user-configurable)
 #
 # (@@@ Windows seems to use something like 500/50 milliseconds
 #  @@@ for -repeatdelay/-repeatinterval)

@@ -53,8 +53,6 @@ ttk::copyBindings TtkScrollable Treeview
 
 ## Keynav -- Keyboard navigation
 #
-# @@@ TODO: verify/rewrite up and down code.
-#
 proc ttk::treeview::Keynav {w dir} {
     set focus [$w focus]
     if {$focus eq ""} { return }

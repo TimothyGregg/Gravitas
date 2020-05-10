@@ -12,8 +12,6 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-# TODO: history - remember partially written command
-
 namespace eval ::tk::console {
     variable blinkTime   500 ; # msecs to blink braced range for
     variable blinkRange  1   ; # enable blinking of the entire braced range

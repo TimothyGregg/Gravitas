@@ -69,7 +69,6 @@ def show_new_board(display):
 
 
 def show_board(display: DisplayHandler):
-	print("Nodes: " + str(len(display.board.nodes)))
 	display.window.fill((0, 43, 54))
 	for edge_uid in display.board.edges:
 		edge = display.board.edges[edge_uid]
@@ -81,3 +80,4 @@ def show_board(display: DisplayHandler):
 		text_surface = display.font.render(str(node_uid), True, (203, 75, 22))  # string, antialias, then color
 		display.window.blit(text_surface, dest=(node.x, node.y))
 	pygame.display.flip()  # Update the whole window
+

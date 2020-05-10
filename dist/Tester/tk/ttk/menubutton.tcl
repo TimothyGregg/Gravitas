@@ -65,8 +65,6 @@ if {[tk windowingsystem] eq "x11"} {
 #	should be posted, based on the menubutton and menu size
 #	and -direction option.
 #
-# TODO: adjust menu width to be at least as wide as the button
-#	for -direction above, below.
 #
 proc ttk::menubutton::PostPosition {mb menu} {
     set x [winfo rootx $mb]

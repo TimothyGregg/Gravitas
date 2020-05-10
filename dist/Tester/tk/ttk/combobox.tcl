@@ -361,8 +361,6 @@ proc ttk::combobox::ConfigureListbox {cb} {
 ## PlacePopdown --
 #	Set popdown window geometry.
 #
-# @@@TODO: factor with menubutton::PostPosition
-#
 proc ttk::combobox::PlacePopdown {cb popdown} {
     set x [winfo rootx $cb]
     set y [winfo rooty $cb]

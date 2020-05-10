@@ -7,13 +7,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# ToDo:
-#
-#	(1): Find out how many free colors are left in the colormap and
-#	     don't allocate too many colors.
-#	(2): Implement HSV color selection.
-#
 
 # Make sure namespaces exist
 namespace eval ::tk {}
