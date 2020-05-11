@@ -1,5 +1,4 @@
-import Toolbox
-import Node
+from Base import Node, Toolbox
 
 
 class Edge:

@@ -1,13 +1,11 @@
-from Graph import *
-import Toolbox
+from Base.Graph import *
+from Base import Toolbox
 import random
 import statistics
 
 
 class AntGraph(Graph):
-	sparcity = 0.1
-
-	def __init__(self, size_x: int, size_y: int, node_radius: float):
+	def __init__(self, size_x: int, size_y: int, node_radius: float, sparcity: float = 0.7):
 		# Graph super constructor
 		super().__init__()
 
@@ -15,6 +13,7 @@ class AntGraph(Graph):
 		self.size_x = size_x
 		self.size_y = size_y
 		self.node_radius = node_radius
+		self.sparcity = sparcity
 		self.edge_lengths = []
 
 		self.add_nodes()
@@ -22,13 +21,17 @@ class AntGraph(Graph):
 
 	# Grab all the points for the graph from a Poisson-Disc point generator
 	def add_nodes(self):
+		print("Adding Nodes...")
 		all_points = []
+		# TODO: When the board is too small to fit 4 nodes, this goes infinite. Hmm. Maybe do the decrementing node
+		#  radius thing. Kinda depends on how I want to do it.
 		while len(all_points) < 4:  # 4 is the minimum for Delaunay Triangulation
 			all_points = Toolbox.PoissonGenerator(self.size_x, self.size_y, self.node_radius * 2).get_all_points()
 		for point_tuple in all_points:
 			self.add_node(point_tuple)
 
 	def add_edges(self):
+		print("Adding Edges...")
 		# Generate the Delauney edges using the Voronoi method and connect them
 		edge_dict = self.get_voronoi_diagram_ridge_lines()
 		for node1_uid in edge_dict:
@@ -36,6 +39,7 @@ class AntGraph(Graph):
 				new_edge_uid = self.connect_nodes(self.nodes[node1_uid], self.nodes[node2_uid])
 				self.edge_lengths.append(self.edges[new_edge_uid].length)
 
+		print("\tCulling Edges...")
 		# Cull edges that are too long (typically along the edges, with crazy-big circles
 		# TODO this may be able to be rolled in to part of the computation of the Voronoi regions (i.e. the regions
 		#  that extent to infinity are probably those with long edges spanning the exterior of the graph)
@@ -43,9 +47,11 @@ class AntGraph(Graph):
 		st_dev = statistics.stdev(self.edge_lengths)
 		all_edge_keys = list(self.edges.keys())
 		for edge_uid in all_edge_keys:
+
 			if self.edges[edge_uid].length > average + st_dev:
 				self.disconnect_edge(edge_uid)
 
+		print("\tInducing Sparcity...\tSparcity: " + str(self.sparcity) + ", Nodes: " + str(len(self.nodes)))
 		# remove random edges to generate edge sparcity
 		all_edge_keys = list(self.edges.keys())
 		to_remove = []
@@ -59,7 +65,7 @@ class AntGraph(Graph):
 				continue
 
 			# Randomly remove edges based on sparcity
-			if random.random() > AntGraph.sparcity:
+			if random.random() > self.sparcity:
 				to_remove.append(edge_uid)
 		for edge_uid in to_remove:
 			if not self.is_bridge(edge_uid):

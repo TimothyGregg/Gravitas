@@ -1,5 +1,5 @@
-from Edge import *
-from Node import *
+from Base.Edge import *
+from Base.Node import *
 from typing import Tuple
 import numpy
 from scipy.spatial import Voronoi
@@ -61,20 +61,21 @@ class Graph:
     # Reference: https://www.geeksforgeeks.org/check-removing-given-edge-disconnects-given-graph/
     # Return True if the graph is connected; otherwise, False
     def is_connected(self):
-        def depth_first_search(node_uid):
-            # Current Node has been visited
-            visited[node_uid] = True
-
-            # Recur for each adjacent node that hasn't been visited
-            for connected_node_uid in self.adjacency_list[node_uid]:
-                if not visited[connected_node_uid]:
-                    depth_first_search(connected_node_uid)
-
         # Make the visited list and do a DFS
         visited = {}
+        stack = [self.nodes[0].uid]
         for node_uid in self.nodes:
             visited[node_uid] = False
-        depth_first_search(0)
+        # nodes to (but not including) 0 (step by -1
+        while stack:
+            node_uid = stack[-1]
+            if not visited[node_uid]:
+                visited[node_uid] = True
+                stack.pop()
+                for connected_node_uid in self.adjacency_list[node_uid]:
+                    stack.append(connected_node_uid)
+            else:
+                stack.pop()
 
         # True if all nodes reachable from the first, otherwise False
         return all(list(visited[node_uid] for node_uid in visited))
