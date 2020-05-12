@@ -1,10 +1,10 @@
-from Base import Node, Toolbox
+from Base import Vertex, Toolbox
 
 
 class Edge:
-    def __init__(self, node1: Node, node2: Node, uid: int):
+    def __init__(self, vertex1: Vertex, vertex2: Vertex, uid: int):
         # Create member variables
-        self.n1 = node1
-        self.n2 = node2
+        self.v1 = vertex1
+        self.v2 = vertex2
         self.uid = uid
-        self.length = Toolbox.node_distance(node1, node2)
+        self.length = Toolbox.vertex_distance(vertex1, vertex2)

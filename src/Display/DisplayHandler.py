@@ -8,6 +8,8 @@ BASE03 = (0, 43, 54)
 BASE01 = (88, 110, 117)
 BASE0 = (131, 148, 150)
 ORANGE = (203, 75, 22)
+RED = (220, 50, 47)
+BLUE = (38, 139, 210)
 
 
 class DisplayHandler:
@@ -57,10 +59,10 @@ def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool 
 	pygame.quit()
 
 
-def antgraph_window(size_x: int, size_y: int, node_radius: int, fullscreen: bool = False, sparcity: float = 1.0):
+def antgraph_window(size_x: int, size_y: int, vertex_radius: int, fullscreen: bool = False, sparcity: float = 1.0):
 
 	# Create the first GraphTypes and hand it to the pygame_wrapper
-	board = AntGraph(size_x, size_y, node_radius, sparcity)
+	board = AntGraph(size_x, size_y, vertex_radius, sparcity)
 	pygame_wrapper((size_x, size_y), board, fullscreen)
 
 
@@ -91,7 +93,7 @@ def run(display: DisplayHandler):
 
 def show_new_board(display):
 	if type(display.board) == AntGraph:
-		display.board = AntGraph(display.window.get_width(), display.window.get_height(), display.board.node_radius,
+		display.board = AntGraph(display.window.get_width(), display.window.get_height(), display.board.vertex_radius,
 							 display.board.sparcity)
 	show_board(display)
 
@@ -102,14 +104,18 @@ def show_board(display: DisplayHandler):
 	board_surface.fill(BASE03)
 	for edge_uid in display.board.edges:
 		edge = display.board.edges[edge_uid]
-		pygame.gfxdraw.line(board_surface, edge.n1.x, edge.n1.y, edge.n2.x, edge.n2.y, BASE01)
-	for node_uid in display.board.nodes:
-		node = display.board.nodes[node_uid]
-		pygame.gfxdraw.circle(board_surface, node.x, node.y, display.board.node_radius, BASE01)  # True radius
-		pygame.gfxdraw.circle(board_surface, node.x, node.y, 5, BASE0)  # Center circle
-		if len(display.board.nodes) < 500:
-			text_surface = display.font.render(str(node_uid), True, ORANGE)  # string, antialias, then color
-			board_surface.blit(text_surface, dest=(node.x, node.y))  # Node number
-	display.window.blit(pygame.transform.scale(board_surface, (display.window.get_width(), display.window.get_height()))
-						, (0, 0))  # Add the new surface to the main window
+		pygame.gfxdraw.line(board_surface, edge.v1.x, edge.v1.y, edge.v2.x, edge.v2.y, BASE01)
+	for vertex_uid in display.board.vertices:
+		vertex = display.board.vertices[vertex_uid]
+		# This is 2 * vertex_radius as seen by the Poisson Generator. This is the maximum spawn radius.
+		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 4 * display.board.vertex_radius, BLUE)  # 4x radius
+		# This is vertex_radius as seen by the Poisson Generator. This is the exclusion radius.
+		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 2 * display.board.vertex_radius, RED)  # 2x radius
+		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, display.board.vertex_radius, BASE01)  # True radius
+		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, BASE0)  # Center circle
+		if len(display.board.vertices) < 500:
+			text_surface = display.font.render(str(vertex_uid), True, ORANGE)  # string, antialias, then color
+			board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
+	display.window.blit(pygame.transform.scale(board_surface,
+		(display.window.get_width(), display.window.get_height())), (0, 0))  # Add the new surface to the main window
 	pygame.display.flip()  # Update the whole window

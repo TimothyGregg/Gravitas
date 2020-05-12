@@ -2,9 +2,9 @@ import math
 import random
 
 
-def node_distance(node1, node2):
-    dx = node1.x - node2.x
-    dy = node1.y - node2.y
+def vertex_distance(vertex1, vertex2):
+    dx = vertex1.x - vertex2.x
+    dy = vertex1.y - vertex2.y
     return math.sqrt(dx ** 2 + dy ** 2)
 
 
@@ -33,26 +33,26 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
 
 # Inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
 class PoissonGenerator:
-    def __init__(self, size_x: int, size_y: int, node_radius: float, spawn_tries: int = 4):
+    def __init__(self, size_x: int, size_y: int, vertex_radius: float, spawn_tries: int = 4):
         # Number of tries before a spawn point is removed from the spawn_points list
         self.spawn_tries = spawn_tries
         # General size variables
         self.size_x = size_x            # Size of the graph in the x-dimension
         self.size_y = size_y            # Size of the graph in the y-dimension
-        self.node_radius = node_radius  # This is the exclusion radius of a point within this graph. This is the
+        self.vertex_radius = vertex_radius  # This is the exclusion radius of a point within this graph. This is the
         # radius of the circle drawn around each point in which the CENTER of another point cannot reside. The
         # exclusion circles for point will overlap, but 1/2 the exclusion radius yields circles that should NEVER
         # overlap.
 
         # Grid size variables
-        self.cell_size = node_radius / math.sqrt(2)             # The cell size for the backing grid
+        self.cell_size = vertex_radius / math.sqrt(2)             # The cell size for the backing grid
         self.num_rows = math.ceil(size_x / self.cell_size)      # The number of rows in the backing grid
         self.column_size = math.ceil(size_y / self.cell_size)   # The number of elements in each column of the grid
 
         # The grid for smart distance checking
         self.grid = [[0 for _ in range(self.column_size)] for _ in range(self.num_rows)]    # Use "_" for unused var
-        # The grid contains all 0's by default, which indicates nothing is there. To indicate a node exists on the
-        # grid, we add the index of the node within points_vector PLUS 1. Keep this in mind when indexing based on
+        # The grid contains all 0's by default, which indicates nothing is there. To indicate a vertex exists on the
+        # grid, we add the index of the vertex within points_vector PLUS 1. Keep this in mind when indexing based on
         # values found in the grid.
         # This generates all 0's, and "[[0] * 10] * 10" will yield a list of ten references to the same list of 10 zeros
 
@@ -92,7 +92,7 @@ class PoissonGenerator:
         # point from spawn_points
         for it in range(self.spawn_tries):
             # Generate new point first in polar coordinates, then convert to rectangular
-            radius = self.node_radius * (1 + math.sqrt(random.random()))    # Distance in polar coordinates. This is
+            radius = self.vertex_radius * (1 + math.sqrt(random.random()))    # Distance in polar coordinates. This is
             # specifically written to generate numbers that are evenly distributed through the area of the circle
             # drawn, not along the radius, as that would lead to a larger density at the center of the field. Read
             # more here: http://www.anderswallin.net/2009/05/uniform-random-points-in-a-circle-using-polar-coordinates/
@@ -111,7 +111,7 @@ class PoissonGenerator:
             if bool(self.grid[grid_x_pos][grid_y_pos]):
                 continue
 
-            distance = 2 * self.node_radius     # A distance that is by default acceptable
+            distance = 2 * self.vertex_radius     # A distance that is by default acceptable
 
             # Loop through the local x-range of the gird
             for x_it in range(grid_x_pos - 2, grid_x_pos + 3):  # Runs 5 times
@@ -132,15 +132,15 @@ class PoissonGenerator:
                         distance = math.sqrt(dx ** 2 + dy ** 2)
 
                     # If the point is no good, we break out of both loops and throw out the guess
-                    if distance < self.node_radius:
+                    if distance < self.vertex_radius:
                         break
 
                 # If the point is no good, we break out of both loops and throw out the guess
-                if distance < self.node_radius:
+                if distance < self.vertex_radius:
                     break
 
             # If after checking all local grid squares and no points were found that exclude the point from existing...
-            if distance > self.node_radius:
+            if distance > self.vertex_radius:
                 # Add the point to the points_vector
                 self.points_vector.append((x_guess, y_guess))
                 # Add the point as a new available spawn point
