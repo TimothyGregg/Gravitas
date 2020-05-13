@@ -13,15 +13,18 @@ class Graph:
         self.edges = {}
         self.adjacency_list = {}  # A classic graph adjacency list for easy connectivity checks
 
-    # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex
+    # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex. Return the uid of
+    # the Vertex that was just created
     def add_vertex(self, location: Tuple[int, int]):
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
+                print("Goof")
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
         new_vertex = Vertex(location[0], location[1], self._vertex_uid)
         self._vertex_uid += 1
         self.vertices[new_vertex.uid] = new_vertex
         self.adjacency_list[new_vertex.uid] = []
+        return new_vertex.uid
 
     # Create an Edge connecting two vertices and note the connection in the adjacency list. Return the uid of the
     # Edge that was just created
@@ -116,3 +119,7 @@ class Graph:
         # This **ISN'T** twice as large as the set of all connections. It contains only one element of each list in each
         # key for each connection.
         return vertex_connections
+
+    # The default update method. It does nothing; this is based on subclass implementation
+    def update(self):
+        pass

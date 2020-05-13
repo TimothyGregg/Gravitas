@@ -39,8 +39,8 @@ class PoissonGenerator:
         # General size variables
         self.size_x = size_x            # Size of the graph in the x-dimension
         self.size_y = size_y            # Size of the graph in the y-dimension
-        self.vertex_radius = vertex_radius  # This is the exclusion radius of a point within this graph. This is the
-        # radius of the circle drawn around each point in which the CENTER of another point cannot reside. The
+        self.vertex_radius = vertex_radius  # This is the exclusion radius of a point within this graph. This is
+        # the radius of the circle drawn around each point in which the CENTER of another point cannot reside. The
         # exclusion circles for point will overlap, but 1/2 the exclusion radius yields circles that should NEVER
         # overlap.
 
@@ -113,7 +113,7 @@ class PoissonGenerator:
 
             distance = 2 * self.vertex_radius     # A distance that is by default acceptable
 
-            # Loop through the local x-range of the gird
+            # Loop through the local x-range of the grid
             for x_it in range(grid_x_pos - 2, grid_x_pos + 3):  # Runs 5 times
                 # Check if outside the x-bounds of the grid
                 if x_it < 0 or x_it > len(self.grid) - 1:
