@@ -100,7 +100,7 @@ def run(display: DisplayHandler):
 		# This is where we put the update code
 		if update_clock == 0:
 			display.board.update()
-		update_clock = (update_clock + 1) % 100
+		update_clock = (update_clock + 1) % 10
 		show_board(display)
 
 

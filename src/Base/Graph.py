@@ -15,13 +15,19 @@ class Graph:
 
     # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex. Return the uid of
     # the Vertex that was just created
-    def add_vertex(self, location: Tuple[int, int]):
+    def add_vertex(self, location: Tuple[int, int], vertex_preset_uid: int = None):
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
-                print("Goof")
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
-        new_vertex = Vertex(location[0], location[1], self._vertex_uid)
-        self._vertex_uid += 1
+        # When a vertex is being added, ignorant of a UID
+        if vertex_preset_uid is None:
+            new_vertex = Vertex(location[0], location[1], self._vertex_uid)
+            self._vertex_uid += 1
+        # For when a vertex needs to be added with a specific UID
+        else:
+            if vertex_preset_uid in self.vertices:
+                raise RuntimeError("Overlapping vertex UIDs attempted to be assigned")
+            new_vertex = Vertex(location[0], location[1], vertex_preset_uid)
         self.vertices[new_vertex.uid] = new_vertex
         self.adjacency_list[new_vertex.uid] = []
         return new_vertex.uid
@@ -52,14 +58,12 @@ class Graph:
         else:
             raise RuntimeError("You goofed on the key for an Edge removal.")
 
-    # Return a list of tuples, with (vertex_uid, vertex_position)
-    def get_vertex_position_list(self):
-        vertex_uid_list = []
-        vertex_position_list = []
+    # Return a dict, with {vertex_uid: vertex (x, y) position tuple}
+    def get_vertex_position_dict(self):
+        vertex_position_dict= {}
         for vertex_uid in self.vertices:
-            vertex_uid_list.append(vertex_uid)
-            vertex_position_list.append((self.vertices[vertex_uid].x, self.vertices[vertex_uid].y))
-        return [(vertex_uid_list[it], vertex_position_list[it]) for it in range(0, len(vertex_uid_list))]
+            vertex_position_dict[vertex_uid] = (self.vertices[vertex_uid].x, self.vertices[vertex_uid].y)
+        return vertex_position_dict
 
     # Reference: https://www.geeksforgeeks.org/check-removing-given-edge-disconnects-given-graph/
     # Return True if the graph is connected; otherwise, False
@@ -103,8 +107,11 @@ class Graph:
     # only once (i.e. if Vertex 1 is connected to Vertex 2, Vertex 2 won't show as also being connected to Vertex 1)
     def get_voronoi_diagram_ridge_lines(self):
         # Someone else does all the fancy math for me
-        vertex_position_list = self.get_vertex_position_list()
-        voronoi = Voronoi(numpy.array([vertex_tuple[1] for vertex_tuple in self.get_vertex_position_list()]))
+        vertex_position_dict = self.get_vertex_position_dict()
+        # Create this list for reference down in the translation from voronoi ridge_points to UIDs to ensure that
+        # even if the UIDs aren't in order in the dict, we keep them consistent
+        vertex_uid_list = [vertex_uid for vertex_uid in vertex_position_dict]
+        voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))
 
         # Storage variable
         vertex_connections = {}
@@ -114,11 +121,58 @@ class Graph:
         # Dump the ridge points array into the same format as used in the Delaunay case
         for pair in voronoi.ridge_points:
             # Use the UIDs from the vertex_position_dict just in case UIDs got scrambled and aren't in order
-            vertex_connections[vertex_position_list[pair[0]][0]].append(vertex_position_list[pair[1]][0])
+            # Add the UID of the second point (pair[1]) to the connections of the first UID (pair[0])
+            vertex_connections[vertex_uid_list[pair[0]]].append(vertex_uid_list[pair[1]])
 
         # This **ISN'T** twice as large as the set of all connections. It contains only one element of each list in each
         # key for each connection.
         return vertex_connections
+
+    def get_voronoi_regions(self):
+        # Once again, someone else does all the fancy math for me
+        vertex_position_dict = self.get_vertex_position_dict()
+        voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))
+
+        # Create this list for reference in the translation from voronoi ridge_points to UIDs to ensure that
+        # even if the UIDs aren't in order in the dict, we keep them consistent
+        vertex_uid_list = [vertex_uid for vertex_uid in vertex_position_dict]
+        # Storage for the relevant [vertices of a *region*] of a given Vertex in the Graph
+        vertex_voronoi_regions = {vertex_uid: set([]) for vertex_uid in vertex_uid_list}  # This contains sets of
+        # vertices in the Voronoi Graph (sets will not add an element again if it already exists)
+
+        # Create a Voronoi Graph here:
+        voronoi_graph = Graph()
+
+        # Add vertices to Voronoi Graph
+        _voronoi_graph_vertex_uid = 0
+        for position_tuple in voronoi.vertices:
+            voronoi_graph.add_vertex((position_tuple[0], position_tuple[1]), _voronoi_graph_vertex_uid)
+            _voronoi_graph_vertex_uid += 1
+
+        # Add edges to Voronoi Graph
+        for simplex, ridge_points in zip(voronoi.ridge_vertices, voronoi.ridge_points):  # These are the vertices
+            # that are at the end of each ridge and the points that the ridge runs between
+
+            if all([vertex >= 0 for vertex in simplex]):  # Internal Edge
+                # If the vertices both exist (i.e., this isn't an infinite edge), connect them in the Voronoi graph
+                voronoi_graph.connect_vertices(voronoi_graph.vertices[simplex[0]], voronoi_graph.vertices[simplex[1]])
+                # Then, add those Voronoi edges to the graph vertex region sets. We can add them indiscriminately
+                # without checking if they already exist in the set because a set auto-makes a unique list
+                vertex_voronoi_regions[ridge_points[0]].append(voronoi_graph.vertices[simplex[0]])
+                vertex_voronoi_regions[ridge_points[0]].append(voronoi_graph.vertices[simplex[1]])
+                vertex_voronoi_regions[ridge_points[1]].append(voronoi_graph.vertices[simplex[0]])
+                vertex_voronoi_regions[ridge_points[1]].append(voronoi_graph.vertices[simplex[1]])
+
+            # If one of the vertices is -1, we need to do some line math to find the terminus of that edge
+            # TODO find the minimum and maximum graph boundary intercepts and use them to define the edge regions
+            else:  # Infinite Edge
+                # TODO here we need to add in a formula for calculating the intercept of the line with one of the
+                #  boundaries of the graph and then add that as a point to the vertex_voronoi_regions
+                finite_point = simplex[simplex >= 0][0]  # The point that exists in the Voronoi Graph
+                tangent_dx = self.vertices[vertex_uid_list[ridge_points[1]]].x \
+                             - self.vertices[vertex_uid_list[ridge_points[0]]].x
+                tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \
+                             - self.vertices[vertex_uid_list[ridge_points[0]]].y
 
     # The default update method. It does nothing; this is based on subclass implementation
     def update(self):
