@@ -13,6 +13,14 @@ class Graph:
         self.edges = {}
         self.adjacency_list = {}  # A classic graph adjacency list for easy connectivity checks
 
+    def __str__(self):
+        out_str = ""
+        for vertex_uid in self.vertices:
+            out_str += str(self.vertices[vertex_uid]) + "\n"
+        for edge_uid in self.edges:
+            out_str += str(self.edges[edge_uid]) + "\n"
+        return out_str
+
     # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex. Return the uid of
     # the Vertex that was just created
     def add_vertex(self, location: Tuple[int, int], vertex_preset_uid: int = None):
@@ -158,17 +166,20 @@ class Graph:
                 voronoi_graph.connect_vertices(voronoi_graph.vertices[simplex[0]], voronoi_graph.vertices[simplex[1]])
                 # Then, add those Voronoi edges to the graph vertex region sets. We can add them indiscriminately
                 # without checking if they already exist in the set because a set auto-makes a unique list
-                vertex_voronoi_regions[ridge_points[0]].append(voronoi_graph.vertices[simplex[0]])
-                vertex_voronoi_regions[ridge_points[0]].append(voronoi_graph.vertices[simplex[1]])
-                vertex_voronoi_regions[ridge_points[1]].append(voronoi_graph.vertices[simplex[0]])
-                vertex_voronoi_regions[ridge_points[1]].append(voronoi_graph.vertices[simplex[1]])
+                vertex_voronoi_regions[ridge_points[0]].add(voronoi_graph.vertices[simplex[0]])
+                vertex_voronoi_regions[ridge_points[0]].add(voronoi_graph.vertices[simplex[1]])
+                vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[simplex[0]])
+                vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[simplex[1]])
 
             # If one of the vertices is -1, we need to do some line math to find the terminus of that edge
             # TODO find the minimum and maximum graph boundary intercepts and use them to define the edge regions
             else:  # Infinite Edge
                 # TODO here we need to add in a formula for calculating the intercept of the line with one of the
                 #  boundaries of the graph and then add that as a point to the vertex_voronoi_regions
-                finite_point = simplex[simplex >= 0][0]  # The point that exists in the Voronoi Graph
+
+                # The point that exists in the Voronoi Graph. There will only ever be two, so using the list
+                # comprehension to grab the non-negative one works just fine
+                finite_point = [simplex_value for simplex_value in simplex if simplex_value > 0]
                 tangent_dx = self.vertices[vertex_uid_list[ridge_points[1]]].x \
                              - self.vertices[vertex_uid_list[ridge_points[0]]].x
                 tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \
