@@ -96,9 +96,24 @@ class PoissonGenerator:
             # specifically written to generate numbers that are evenly distributed through the area of the circle
             # drawn, not along the radius, as that would lead to a larger density at the center of the field. Read
             # more here: http://www.anderswallin.net/2009/05/uniform-random-points-in-a-circle-using-polar-coordinates/
-            theta = 2 * math.pi * random.random()                           # Angle in polar coordinates
-            x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + round(radius * math.cos(theta))
-            y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + round(radius * math.sin(theta))
+            # The rounding is based on theta. Because the vertices are positioned at integer coordinates,
+            # the floating-point distances between them can be messed up if you round them the same way every time.
+            # This way, they always round to be INSIDE the bounding circle.
+            theta = 2 * math.pi * random.random()  # Angle in polar coordinates
+            x_addition = radius * math.cos(theta)  # The distance added in the x-direction
+            y_addition = radius * math.sin(theta)  # The distance added in the y-direction
+            if 0 <= theta < math.pi / 2:  # First quadrant rounding
+                x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + math.floor(x_addition)
+                y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + math.floor(y_addition)
+            elif math.pi / 2 < theta < math.pi:  # Second quadrant rounding
+                x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + math.ceil(x_addition)
+                y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + math.floor(y_addition)
+            elif math.pi < theta < 3 * math.pi / 2:  # Third quadrant rounding
+                x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + math.ceil(x_addition)
+                y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + math.ceil(y_addition)
+            elif 3 * math.pi / 2 < theta <= 2 * math.pi:  # Fourth quadrant rounding
+                x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + math.floor(x_addition)
+                y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + math.ceil(y_addition)
 
             # Fail to generate if the point lies outside the limits of the graph
             if x_guess < 0 or x_guess > self.size_x or y_guess < 0 or y_guess > self.size_y:
@@ -111,7 +126,7 @@ class PoissonGenerator:
             if bool(self.grid[grid_x_pos][grid_y_pos]):
                 continue
 
-            distance = 2 * self.vertex_radius     # A distance that is by default acceptable
+            distance = 2 * self.vertex_radius  # A distance that is by default acceptable
 
             # Loop through the local x-range of the grid
             for x_it in range(grid_x_pos - 2, grid_x_pos + 3):  # Runs 5 times

@@ -185,6 +185,6 @@ class Graph:
                 tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \
                              - self.vertices[vertex_uid_list[ridge_points[0]]].y
 
-    # The default update method. It does nothing; this is based on subclass implementation
+    # The default update method. Returns a value describing if the Graph was able to update successfully.
     def update(self):
-        pass
+        return True

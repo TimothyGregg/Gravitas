@@ -32,6 +32,9 @@ def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool 
 	# Initialize pygame
 	pygame.init()
 
+	# Set some stuff up for displaying properly
+	pygame.mouse.set_visible(False)
+
 	# Name the pygame window
 	pygame.display.set_caption("antgraph_display_test")
 
@@ -89,6 +92,7 @@ def run(display: DisplayHandler):
 				else:
 					# TODO Throw a "Generating..." splash here
 					show_new_board(display)
+					update_clock = 0
 			elif event.type == pygame.VIDEORESIZE:
 				# This handles resizing the graph to fit the window. Currently it stretches to fill. I think I want
 				# to keep it proportional and just fit it inside the window. TODO: <-- That
@@ -98,10 +102,15 @@ def run(display: DisplayHandler):
 					display.window = pygame.display.set_mode(event.dict['size'], pygame.RESIZABLE)
 				show_board(display)
 		# This is where we put the update code
+		updated_successfully = False
 		if update_clock == 0:
-			display.board.update()
-		update_clock = (update_clock + 1) % 10
-		show_board(display)
+			updated_successfully = display.board.update()
+		if updated_successfully:
+			update_clock = (update_clock + 1) % 1
+			show_board(display)
+		else:
+			show_new_board(display)
+			update_clock = 0
 
 
 def show_new_board(display):
@@ -126,9 +135,9 @@ def show_board(display: DisplayHandler):
 		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 2 * display.board.vertex_radius, RED)  # 2x radius
 		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, display.board.vertex_radius, BASE01)  # True radius
 		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, BASE0)  # Center circle
-		if len(display.board.vertices) < 500:
-			text_surface = display.font.render(str(vertex_uid), True, ORANGE)  # string, antialias, then color
-			board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
+		# if len(display.board.vertices) < 500:
+		# 	text_surface = display.font.render(str(vertex_uid), True, ORANGE)  # string, antialias, then color
+		# 	board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
 	for edge_uid in display.board.edges:
 		edge = display.board.edges[edge_uid]
 		pygame.gfxdraw.line(board_surface, edge.v1.x, edge.v1.y, edge.v2.x, edge.v2.y, BASE3)

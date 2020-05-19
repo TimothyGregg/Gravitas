@@ -43,13 +43,13 @@ class IncrementalGraph(Graph):
 		grid_y_pos = int(new_point_position[1] / self.generator.cell_size)  # Grid x-location of the generated point
 
 		# Loop through the local x-range of the grid in self.generator
-		for x_it in range(grid_x_pos - 2, grid_x_pos + 3):  # Runs 5 times
+		for x_it in range(grid_x_pos - 3, grid_x_pos + 4):  # Runs 7 times
 			# Check if outside the x-bounds of the grid
 			if x_it < 0 or x_it > len(self.generator.grid) - 1:
 				continue
 
 			# loop through the local y-range of the grid
-			for y_it in range(grid_y_pos - 2, grid_y_pos + 3):  # Runs 5 times
+			for y_it in range(grid_y_pos - 3, grid_y_pos + 4):  # Runs 7 times
 				# Check if outside the y-bounds of the grid
 				if y_it < 0 or y_it > len(self.generator.grid[x_it]) - 1:
 					continue
@@ -71,14 +71,13 @@ class IncrementalGraph(Graph):
 					# If the point that we found is inside the spawn radius of the point (note: it should ALWAYS be
 					# outside the exclusion radius (self.vertex_radius * 2) by virtue of how the points are generated in
 					# the Poisson Generator), we should connect them.
-					if distance <= self.generator.vertex_radius * 4:
-						print("Connection to be made")
+					if distance <= self.vertex_radius * 4:
 						self.connect_vertices(self.vertices[self.vertex_positions[new_point_position]],
 											  self.vertices[self.vertex_positions[other_point_position]])
 
-		# Debug
-		if (len(self.vertices) > 1) & ((self.vertices[len(self.vertices) - 1]) == 0):
-			raise RuntimeError("Vertex not connected in generation")
+		# This should NEVER trip, after I messed with the rounding errors in the Poisson Generator.
+		if (len(self.vertices) > 1) & (len((self.adjacency_list[len(self.vertices) - 1])) == 0):
+			raise RuntimeError("Vertex not connected in generation: " + str(self.vertices[len(self.vertices) - 1]))
 
 		# After it's completed, destroy the generator if it is finished
 		if self.generator.finished():
@@ -88,3 +87,16 @@ class IncrementalGraph(Graph):
 	def update(self):
 		if self.generator:
 			self.add_next_vertex()
+			return True
+		return False
+
+	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
+	def desmos_dump(self):
+		for vertex_uid in self.vertices:
+			vertex = self.vertices[vertex_uid]
+			print("(" + str(vertex.x) + ", " + str(vertex.y) + ")")
+			print("(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2")
+			print("(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius * 4) + "^2")
+		for edge_uid in self.edges:
+			print("((1-t)" + str(self.edges[edge_uid].v1.x) + "+t*" + str(self.edges[edge_uid].v2.x) + ",(1-t)" +
+				  str(self.edges[edge_uid].v1.y) + "+t*" + str(self.edges[edge_uid].v2.y) + ")")
