@@ -5,7 +5,7 @@ class Vertex:
         # Set member variables
         self.x = x
         self.y = y
-        # Set unique ID, then increment the class-based unique ID count
+        # Set unique ID
         self.uid = uid
 
     def __str__(self):

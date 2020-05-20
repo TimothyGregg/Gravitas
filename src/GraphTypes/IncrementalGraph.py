@@ -42,14 +42,15 @@ class IncrementalGraph(Graph):
 		grid_x_pos = int(new_point_position[0] / self.generator.cell_size)  # Grid x-location of the generated point
 		grid_y_pos = int(new_point_position[1] / self.generator.cell_size)  # Grid x-location of the generated point
 
+		grid_scan_size = 7  # Should be odd, but modifying this will adjust how far a node looks to connect
 		# Loop through the local x-range of the grid in self.generator
-		for x_it in range(grid_x_pos - 3, grid_x_pos + 4):  # Runs 7 times
+		for x_it in range(grid_x_pos - int(grid_scan_size / 2), grid_x_pos + (int(grid_scan_size / 2) + 1)):
 			# Check if outside the x-bounds of the grid
 			if x_it < 0 or x_it > len(self.generator.grid) - 1:
 				continue
 
 			# loop through the local y-range of the grid
-			for y_it in range(grid_y_pos - 3, grid_y_pos + 4):  # Runs 7 times
+			for y_it in range(grid_y_pos - int(grid_scan_size / 2), grid_y_pos + (int(grid_scan_size / 2) + 1)):
 				# Check if outside the y-bounds of the grid
 				if y_it < 0 or y_it > len(self.generator.grid[x_it]) - 1:
 					continue
@@ -60,6 +61,7 @@ class IncrementalGraph(Graph):
 
 				# If the generator has a point in the grid near the new point AND it isn't the newest point the
 				# generator made (because it makes one ahead of time), connect the new node to the one found in the grid
+				# TODO: Check for overlaps, perhaps using an edge graph. This maybe should go in Graph.py
 				if self.generator.grid[x_it][y_it] and self.generator.grid[x_it][y_it] < \
 					len(self.generator.points_vector):  # returns True if the value is > 0, i.e. there is a point
 

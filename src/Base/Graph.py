@@ -7,11 +7,15 @@ from scipy.spatial import Voronoi
 
 class Graph:
     def __init__(self):
+        # Graph Properties
         self._vertex_uid = 0
         self._edge_uid = 0
         self.vertices = {}
         self.edges = {}
         self.adjacency_list = {}  # A classic graph adjacency list for easy connectivity checks
+
+        # Things to help out the Voronoi Generation
+        self.center = Vertex(0, 0, -1)  # The average of all vertices x and y values, UID of -1
 
     def __str__(self):
         out_str = ""
@@ -27,17 +31,26 @@ class Graph:
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
+
         # When a vertex is being added, ignorant of a UID
         if vertex_preset_uid is None:
             new_vertex = Vertex(location[0], location[1], self._vertex_uid)
             self._vertex_uid += 1
+
         # For when a vertex needs to be added with a specific UID
         else:
             if vertex_preset_uid in self.vertices:
                 raise RuntimeError("Overlapping vertex UIDs attempted to be assigned")
             new_vertex = Vertex(location[0], location[1], vertex_preset_uid)
+
+        # Add the vertex to the graph
         self.vertices[new_vertex.uid] = new_vertex
         self.adjacency_list[new_vertex.uid] = []
+
+        # Update the center of the graph
+        self.center.x += (new_vertex.x - self.center.x) / len(self.vertices)
+        self.center.y += (new_vertex.y - self.center.y) / len(self.vertices)
+
         return new_vertex.uid
 
     # Create an Edge connecting two vertices and note the connection in the adjacency list. Return the uid of the
@@ -72,6 +85,28 @@ class Graph:
         for vertex_uid in self.vertices:
             vertex_position_dict[vertex_uid] = (self.vertices[vertex_uid].x, self.vertices[vertex_uid].y)
         return vertex_position_dict
+
+    # Return a tuple of tuples, describing the bottom left and top right (in xy-coordinates) of the smallest possible
+    # bounding box for all points
+    def get_boundary_points(self):
+        x_min = 0
+        x_max = 0
+        y_min = 0
+        y_max = 0
+        for vertex_uid in self.vertices:
+            # Adjust x-values
+            if self.vertices[vertex_uid].x > x_max:
+                x_max = self.vertices[vertex_uid].x
+            elif self.vertices[vertex_uid].x < x_min:
+                x_min = self.vertices[vertex_uid].x
+
+            # Adjust y-values
+            if self.vertices[vertex_uid].y > y_max:
+                y_max = self.vertices[vertex_uid].y
+            elif self.vertices[vertex_uid].y < y_min:
+                y_min = self.vertices[vertex_uid].y
+
+        return (x_min, y_min), (x_max, y_max)
 
     # Reference: https://www.geeksforgeeks.org/check-removing-given-edge-disconnects-given-graph/
     # Return True if the graph is connected; otherwise, False
@@ -179,7 +214,7 @@ class Graph:
 
                 # The point that exists in the Voronoi Graph. There will only ever be two, so using the list
                 # comprehension to grab the non-negative one works just fine
-                finite_point = [simplex_value for simplex_value in simplex if simplex_value > 0]
+                finite_point_voronoi_vertex_uid = [simplex_value for simplex_value in simplex if simplex_value > 0]
                 tangent_dx = self.vertices[vertex_uid_list[ridge_points[1]]].x \
                              - self.vertices[vertex_uid_list[ridge_points[0]]].x
                 tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \

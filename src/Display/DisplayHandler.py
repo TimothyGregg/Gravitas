@@ -2,6 +2,7 @@ from GraphTypes.AntGraph import *
 from GraphTypes.IncrementalGraph import *
 import pygame
 from pygame import gfxdraw
+import time
 from typing import Tuple
 
 
@@ -12,6 +13,8 @@ BASE3 = (253, 246, 227)
 ORANGE = (203, 75, 22)
 RED = (220, 50, 47)
 BLUE = (38, 139, 210)
+
+time_stop = 20
 
 
 class DisplayHandler:
@@ -80,8 +83,7 @@ def incremental_graph_window(size_x: int, size_y: int, vertex_radius: int, fulls
 
 
 def run(display: DisplayHandler):
-	show_board(display)
-	update_clock = 0
+	show_board(display, display.board)
 	while True:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -100,17 +102,17 @@ def run(display: DisplayHandler):
 					display.window = pygame.display.set_mode(event.dict['size'], pygame.FULLSCREEN | pygame.RESIZABLE)
 				else:
 					display.window = pygame.display.set_mode(event.dict['size'], pygame.RESIZABLE)
-				show_board(display)
+				show_board(display, display.board)
 		# This is where we put the update code
-		updated_successfully = False
-		if update_clock == 0:
-			updated_successfully = display.board.update()
+		updated_successfully = display.board.update()
 		if updated_successfully:
-			update_clock = (update_clock + 1) % 1
-			show_board(display)
+			show_board(display, display.board)
+			time.sleep(time_stop / 1000)  # Time stop in ms
 		else:
+			# display.board.get_voronoi_regions()
+			time.sleep(2)
 			show_new_board(display)
-			update_clock = 0
+		pygame.display.flip()  # Update the whole window
 
 
 def show_new_board(display):
@@ -120,27 +122,39 @@ def show_new_board(display):
 	elif type(display.board) == IncrementalGraph:
 		display.board = IncrementalGraph(display.window.get_width(), display.window.get_height(),
 										 display.board.vertex_radius, display.board.sparcity)
-	show_board(display)
+	show_board(display, display.board)
 
 
-def show_board(display: DisplayHandler):
-	board_surface = pygame.Surface((display.board.size_x, display.board.size_y))  # Make a new surface to draw
+def show_board(display: DisplayHandler, board: Graph):
+	board_surface = pygame.Surface((board.size_x, board.size_y))  # Make a new surface to draw
 	# everything on (to aid in resizing)
 	board_surface.fill(BASE03)
-	for vertex_uid in display.board.vertices:
-		vertex = display.board.vertices[vertex_uid]
+
+	# Vertices
+	for vertex_uid in board.vertices:
+		vertex = board.vertices[vertex_uid]
+		# Circles
 		# This is 2 * vertex_radius as seen by the Poisson Generator. This is the maximum spawn radius.
-		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 4 * display.board.vertex_radius, BLUE)  # 4x radius
+		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 4 * board.vertex_radius, BLUE)  # 4x radius
 		# This is vertex_radius as seen by the Poisson Generator. This is the exclusion radius.
-		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 2 * display.board.vertex_radius, RED)  # 2x radius
-		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, display.board.vertex_radius, BASE01)  # True radius
+		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 2 * board.vertex_radius, RED)  # 2x radius
+		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, board.vertex_radius, BASE01)  # True radius
 		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, BASE0)  # Center circle
-		# if len(display.board.vertices) < 500:
+
+		# Text
+		# if len(board.vertices) < 500:
 		# 	text_surface = display.font.render(str(vertex_uid), True, ORANGE)  # string, antialias, then color
 		# 	board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
-	for edge_uid in display.board.edges:
-		edge = display.board.edges[edge_uid]
+
+	# Edges
+	for edge_uid in board.edges:
+		edge = board.edges[edge_uid]
 		pygame.gfxdraw.line(board_surface, edge.v1.x, edge.v1.y, edge.v2.x, edge.v2.y, BASE3)
+
+	# Center of the Graph
+	pygame.gfxdraw.circle(board_surface, round(board.center.x), round(board.center.y), 7, RED)
+	pygame.gfxdraw.circle(board_surface, round(board.center.x), round(board.center.y), 2, RED)
+
 	display.window.blit(pygame.transform.scale(board_surface,
 		(display.window.get_width(), display.window.get_height())), (0, 0))  # Add the new surface to the main window
-	pygame.display.flip()  # Update the whole window
+
