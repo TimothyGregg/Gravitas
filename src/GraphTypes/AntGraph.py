@@ -1,11 +1,12 @@
 from Base.Graph import *
-from Base import Toolbox
+from Toolbox.PoissonGenerator import PoissonGenerator
 import random
 import statistics
 
 
 class AntGraph(Graph):
-	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7):
+	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7
+				 , seed_point: Tuple[int, int] = None):
 		# Graph super constructor
 		super().__init__()
 
@@ -15,6 +16,7 @@ class AntGraph(Graph):
 		self.vertex_radius = vertex_radius
 		self.sparcity = sparcity
 		self.edge_lengths = []
+		self.seed_point = seed_point
 
 		self.add_vertices()
 		self.add_edges()
@@ -28,7 +30,11 @@ class AntGraph(Graph):
 		default_radius = self.vertex_radius
 		tries = 20
 		while len(all_points) < 4:  # 4 is the minimum for Delaunay Triangulation
-			all_points = Toolbox.PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2).get_all_points()
+			if self.seed_point is None:
+				all_points = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2).get_all_points()
+			else:
+				all_points = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2,
+											  seed_point=self.seed_point).get_all_points()
 			tries -= 1
 			if tries == 0:
 				self.vertex_radius -= 1

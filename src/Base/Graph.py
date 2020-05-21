@@ -17,6 +17,18 @@ class Graph:
         # Things to help out the Voronoi Generation
         self.center = Vertex(0, 0, -1)  # The average of all vertices x and y values, UID of -1
 
+        # TODO We'll come back to this later perhaps. This would make looking for edge overlaps much easier and
+        #  faster, but would require a dynamic resizing of the backing grid AND determining how granular we want to
+        #  be with it.
+        # # Backing class for objects within the Graph storage grid
+        # class GridSquare:
+        #     def __init__(self):
+        #         self.edge_uids = []
+        #         self.node_uids = []
+        #
+        # # Backing grid for storing locations of Graph elements in a more easily-searchable location
+        # self.grid = [[GridSquare() for _ in range(10)] for _ in range(10)]  # Initialize to 10x10 grid.
+
     def __str__(self):
         out_str = ""
         for vertex_uid in self.vertices:

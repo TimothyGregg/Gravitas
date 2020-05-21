@@ -36,7 +36,7 @@ def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool 
 	pygame.init()
 
 	# Set some stuff up for displaying properly
-	pygame.mouse.set_visible(False)
+	# pygame.mouse.set_visible(False)
 
 	# Name the pygame window
 	pygame.display.set_caption("antgraph_display_test")
@@ -85,6 +85,9 @@ def incremental_graph_window(size_x: int, size_y: int, vertex_radius: int, fulls
 def run(display: DisplayHandler):
 	show_board(display, display.board)
 	while True:
+		if pygame.mouse.get_pressed()[0]:
+			mouse_x, mouse_y = pygame.mouse.get_pos()
+			show_new_board(display, (mouse_x, mouse_y))
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				return
@@ -115,13 +118,13 @@ def run(display: DisplayHandler):
 		pygame.display.flip()  # Update the whole window
 
 
-def show_new_board(display):
+def show_new_board(display, seed_point: Tuple[int, int] = None):
 	if type(display.board) == AntGraph:
 		display.board = AntGraph(display.window.get_width(), display.window.get_height(),
-								 display.board.vertex_radius, display.board.sparcity)
+								 display.board.vertex_radius, display.board.sparcity, seed_point)
 	elif type(display.board) == IncrementalGraph:
 		display.board = IncrementalGraph(display.window.get_width(), display.window.get_height(),
-										 display.board.vertex_radius, display.board.sparcity)
+										 display.board.vertex_radius, display.board.sparcity, seed_point)
 	show_board(display, display.board)
 
 

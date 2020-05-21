@@ -1,13 +1,17 @@
 from Base.Graph import Graph
-from Base import Toolbox
+from Toolbox.PoissonGenerator import PoissonGenerator
 import math
+from Toolbox.LineSegmentOverlap import do_intersect
+from typing import Tuple
+# import time
 
 
 # Once we get the Voronoi regions figured out, we'll use that code to exclude the exterior edges on a graph that
 # regenerates the Voronoi edges after adding each Vertex, hopefully making for an interesting, incremental graph
 # building process that you can watch.
 class IncrementalGraph(Graph):
-	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7):
+	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7
+				 , seed_point: Tuple[int, int] = None):
 		# Graph super constructor
 		super().__init__()
 
@@ -19,7 +23,10 @@ class IncrementalGraph(Graph):
 		self.edge_lengths = []
 
 		# The generator to pull each new point from
-		self.generator = Toolbox.PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2)
+		if seed_point is None:
+			self.generator = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2)
+		else:
+			self.generator = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2, seed_point=seed_point)
 		self.vertex_positions = {}  # To store vertex positions for easy lookup in add_next_vertex
 
 	# TODO This sometimes generates unconnected vertices AND sometimes generates edges that overlap, like when you
@@ -74,8 +81,68 @@ class IncrementalGraph(Graph):
 					# outside the exclusion radius (self.vertex_radius * 2) by virtue of how the points are generated in
 					# the Poisson Generator), we should connect them.
 					if distance <= self.vertex_radius * 4:
+						# Connect the new vertex to its neighbor
 						self.connect_vertices(self.vertices[self.vertex_positions[new_point_position]],
 											  self.vertices[self.vertex_positions[other_point_position]])
+
+		#################################################
+		# Here starts mayhem
+		# All this code exists solely to prevent overlapping edges in the graph. This can be simplified to an
+		# unbelievable degree I am sure
+
+		# start = time.perf_counter()
+
+		# self.desmos_dump()
+		# print("-------------------------")
+
+		to_remove = []
+		# For each vertex connected to the one just added...
+		for other_vertex_uid in self.adjacency_list[new_vertex_uid]:
+			# For each of that vertex's connected vertices...
+			for connected_to_other_vertex_uid in self.adjacency_list[other_vertex_uid]:
+				# Ensure that the vertices of the connections of the just-added vertex do not overlap. If they do,
+				# remove them.
+				for connected_vertex_uid in self.adjacency_list[new_vertex_uid]:
+					# Continue when the connection we're checking on is the same as the one we are looking at in this
+					# inner-most loop
+					if other_vertex_uid == connected_vertex_uid:
+						continue
+
+					# Continue when we're looking at the reverse of the current connection
+					elif new_vertex_uid == connected_to_other_vertex_uid:
+						continue
+
+					# Continue when the other point is connected to the same one we're looking at (or something. I'm
+					# just going by similarity here. This is hurting my brain.)
+					elif connected_to_other_vertex_uid == connected_vertex_uid:
+						continue
+
+					# Otherwise, check if they're overlapping. If they are, remove the connection
+					else:
+						if do_intersect(new_point_position, (self.vertices[connected_vertex_uid].x, self.vertices[
+							connected_vertex_uid].y), (self.vertices[other_vertex_uid].x, self.vertices[
+							other_vertex_uid].y), (self.vertices[connected_to_other_vertex_uid].x, self.vertices[
+							connected_to_other_vertex_uid].y)):
+							to_remove.append(connected_vertex_uid)  # The vertex_uid to remove the connection
+						# to new_vertex_uid from
+
+		# TODO there has to be a better way to do this; it's terrible. I may set up a whole internal class for Edges in
+		#  Graph.py and make them more easily searchable by uid or by either of their vertices
+		for other_vertex_uid in to_remove:
+			for edge_uid in self.edges:
+				# If the vertex that this vertex is connected to is the second vertex in an edge containing this new
+				# vertex, remove the edge.
+				if self.edges[edge_uid].v1.uid == other_vertex_uid and self.edges[edge_uid].v2.uid == new_vertex_uid \
+						or self.edges[edge_uid].v2.uid == other_vertex_uid and self.edges[edge_uid].v1.uid == \
+						new_vertex_uid:
+					self.disconnect_edge(edge_uid)
+					# Break, because it should only be true for one edge, and we don't want to concurently modify
+					break
+
+		# print(time.perf_counter() - start)
+
+		# Here ends mayhem
+		#################################################
 
 		# This should NEVER trip, after I messed with the rounding errors in the Poisson Generator.
 		if (len(self.vertices) > 1) & (len((self.adjacency_list[len(self.vertices) - 1])) == 0):

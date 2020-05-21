@@ -1,4 +1,5 @@
-from Base import Vertex, Toolbox
+from Base import Vertex
+from Toolbox.GraphMath import vertex_distance
 
 
 class Edge:
@@ -7,7 +8,7 @@ class Edge:
         self.v1 = vertex1
         self.v2 = vertex2
         self.uid = uid
-        self.length = Toolbox.vertex_distance(vertex1, vertex2)
+        self.length = vertex_distance(vertex1, vertex2)
 
     def __str__(self):
         return "Edge " + str(self.uid) + " [" + str(round(self.length)) + "]; Connecting Vertices " + str(

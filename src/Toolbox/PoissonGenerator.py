@@ -1,39 +1,12 @@
 import math
 import random
-
-
-def vertex_distance(vertex1, vertex2):
-    dx = vertex1.x - vertex2.x
-    dy = vertex1.y - vertex2.y
-    return math.sqrt(dx ** 2 + dy ** 2)
-
-
-# Print iterations progress
-def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', print_end="\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        print_end   - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filled_length = int(length * iteration // total)
-    bar = fill * filled_length + '-' * (length - filled_length)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end=print_end)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
+from typing import Tuple
 
 
 # Inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
 class PoissonGenerator:
-    def __init__(self, size_x: int, size_y: int, vertex_radius: float, spawn_tries: int = 4):
+    def __init__(self, size_x: int, size_y: int, vertex_radius: float, spawn_tries: int = 4
+                 , seed_point: Tuple[int, int] = None):
         # Number of tries before a spawn point is removed from the spawn_points list
         self.spawn_tries = spawn_tries
         # General size variables
@@ -43,6 +16,9 @@ class PoissonGenerator:
         # the radius of the circle drawn around each point in which the CENTER of another point cannot reside. The
         # exclusion circles for point will overlap, but 1/2 the exclusion radius yields circles that should NEVER
         # overlap.
+
+        # Seed point for point generation if one is given
+        self.seed_point = seed_point
 
         # Grid size variables
         self.cell_size = vertex_radius / math.sqrt(2)             # The cell size for the backing grid
@@ -67,9 +43,15 @@ class PoissonGenerator:
     def generate_point(self):
         # If the points_vector list is empty, the board has not been seeded yet.
         if not self.points_vector:
-            # Add (x, y) tuple within the middle third to points_vector
-            start_x = random.randint(int(self.size_x / 3), int(2 * self.size_x / 3))
-            start_y = random.randint(int(self.size_y / 3), int(2 * self.size_y / 3))
+            # If there is no seed point given...
+            if self.seed_point is None:
+                # Add (x, y) tuple within the middle third to points_vector
+                start_x = random.randint(int(self.size_x / 3), int(2 * self.size_x / 3))
+                start_y = random.randint(int(self.size_y / 3), int(2 * self.size_y / 3))
+            # If there IS a seed point given
+            else:
+                start_x = self.seed_point[0]
+                start_y = self.seed_point[1]
             self.points_vector.append((start_x, start_y))
             # Index 0 of points_vector is a viable spawn point
             self.spawn_points.append(0)
