@@ -3,6 +3,7 @@ from Base.Vertex import *
 from typing import Tuple
 import numpy
 from scipy.spatial import Voronoi
+import math
 
 
 class Graph:
@@ -39,7 +40,7 @@ class Graph:
 
     # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex. Return the uid of
     # the Vertex that was just created
-    def add_vertex(self, location: Tuple[int, int], vertex_preset_uid: int = None):
+    def add_vertex(self, location: Tuple, vertex_preset_uid: int = None):
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
@@ -199,12 +200,19 @@ class Graph:
         voronoi_graph = Graph()
 
         # Add vertices to Voronoi Graph
-        _voronoi_graph_vertex_uid = 0
         for position_tuple in voronoi.vertices:
-            voronoi_graph.add_vertex((position_tuple[0], position_tuple[1]), _voronoi_graph_vertex_uid)
-            _voronoi_graph_vertex_uid += 1
+            voronoi_graph.add_vertex((position_tuple[0], position_tuple[1]))
 
         # Add edges to Voronoi Graph
+        # TODO This adds duplicate vertices at the edge when creating infinite vertices IF two of the lines WOULD
+        #  meet at an edge. Maybe I need to make a look-up for that.
+        # TODO This also goofs and always assumes that the midpoint will be between the finite vertex and the
+        #  infinite one, which is not always the case. I think this is a situation where I compare the angles between
+        #  the line from midpoint to vertex and the opposite of that angle to the angle to the center of mass and
+        #  pick the lesser one.
+        # TODO This doesn't address the situation where the angle is perfectly straight between them; for
+        #  example, when you only have two points. Hmmmmm. NO WAIT in that case they're BOTH infinite yikes.
+        # TODO I should really write my own Voronoi algorithm, but that will take SO LONG.
         for simplex, ridge_points in zip(voronoi.ridge_vertices, voronoi.ridge_points):  # These are the vertices
             # that are at the end of each ridge and the points that the ridge runs between
 
@@ -212,25 +220,162 @@ class Graph:
                 # If the vertices both exist (i.e., this isn't an infinite edge), connect them in the Voronoi graph
                 voronoi_graph.connect_vertices(voronoi_graph.vertices[simplex[0]], voronoi_graph.vertices[simplex[1]])
                 # Then, add those Voronoi edges to the graph vertex region sets. We can add them indiscriminately
-                # without checking if they already exist in the set because a set auto-makes a unique list
+                # without checking if they already exist in the set because a set is by definition a unique list
                 vertex_voronoi_regions[ridge_points[0]].add(voronoi_graph.vertices[simplex[0]])
                 vertex_voronoi_regions[ridge_points[0]].add(voronoi_graph.vertices[simplex[1]])
                 vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[simplex[0]])
                 vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[simplex[1]])
 
             # If one of the vertices is -1, we need to do some line math to find the terminus of that edge
-            # TODO find the minimum and maximum graph boundary intercepts and use them to define the edge regions
             else:  # Infinite Edge
-                # TODO here we need to add in a formula for calculating the intercept of the line with one of the
-                #  boundaries of the graph and then add that as a point to the vertex_voronoi_regions
+                # Get Voronoi Graph boundaries
+                voronoi_boundaries = voronoi_graph.get_boundary_points()
 
                 # The point that exists in the Voronoi Graph. There will only ever be two, so using the list
                 # comprehension to grab the non-negative one works just fine
-                finite_point_voronoi_vertex_uid = [simplex_value for simplex_value in simplex if simplex_value > 0]
-                tangent_dx = self.vertices[vertex_uid_list[ridge_points[1]]].x \
-                             - self.vertices[vertex_uid_list[ridge_points[0]]].x
-                tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \
-                             - self.vertices[vertex_uid_list[ridge_points[0]]].y
+                finite_point_voronoi_vertex_uid = [simplex_value for simplex_value in simplex if simplex_value >= 0][0]
+                finite_vertex = voronoi_graph.vertices[finite_point_voronoi_vertex_uid]
+
+                # Definitely bad, can't account for infinity
+                # tangent_dx = self.vertices[vertex_uid_list[ridge_points[1]]].x \
+                #              - self.vertices[vertex_uid_list[ridge_points[0]]].x
+                # tangent_dy = self.vertices[vertex_uid_list[ridge_points[1]]].y \
+                #              - self.vertices[vertex_uid_list[ridge_points[0]]].y
+                # tangent_slope = tangent_dy / tangent_dx
+                # if tangent_slope == 0:
+                #     normal_slope = "infinity"
+                # else:
+                #     normal_slope = -1 / tangent_slope
+
+                # Get the mid-point of the two ridge points
+                midpoint_x = (self.vertices[vertex_uid_list[ridge_points[1]]].x + self.vertices[vertex_uid_list[
+                    ridge_points[0]]].x) / 2
+                midpoint_y = (self.vertices[vertex_uid_list[ridge_points[1]]].y + self.vertices[vertex_uid_list[
+                    ridge_points[0]]].y) / 2
+
+                # This is self-documenting, but it serves as our way of determining which case we need to use to find
+                # the edge of the voronoi region
+                # Account for infinite slopes
+                if finite_vertex.x - midpoint_x == 0:
+                    # Upward line from the midpoint to the Voronoi vertex
+                    if finite_vertex.y - midpoint_y > 0:
+                        theta_from_x_axis_to_real_vertex_from_midpoint = math.pi / 2
+                    # Downward line from the midpoint to the Voronoi vertex
+                    else:
+                        theta_from_x_axis_to_real_vertex_from_midpoint = 3 * math.pi / 2
+                else:
+                    theta_from_x_axis_to_real_vertex_from_midpoint = math.atan((finite_vertex.y - midpoint_y)
+                                                                               / (finite_vertex.x - midpoint_x))
+                theta_from_x_to_inf_point = 2 * math.pi - theta_from_x_axis_to_real_vertex_from_midpoint
+
+                # Handle lines with no angle
+                # Case for a straight line leading to the right from the finite vertex
+                if theta_from_x_to_inf_point == 0:
+                    end_point = (voronoi_boundaries[1][0], finite_vertex.y)  # The x-value of the top-right of the
+                    # bounds
+                # Case for a straight line leading to the left from the finite vertex
+                elif theta_from_x_to_inf_point == math.pi:
+                    end_point = (voronoi_boundaries[0][0], finite_vertex.y)  # The x-value of the bottom-left of the
+                    # bounds
+                # Case for a straight line leading up from the finite vertex
+                elif theta_from_x_to_inf_point == math.pi / 2:
+                    end_point = (finite_vertex.x, voronoi_boundaries[1][1])  # The y-value of the top-right of the
+                    # bounds
+                # Case for a straight line leading down from the finite vertex
+                elif theta_from_x_to_inf_point == 3 * math.pi / 2:
+                    end_point = (finite_vertex.x, voronoi_boundaries[0][1])  # The y-value of the bottom left of the
+                    # bounds
+
+                # Handle lines with an angle
+                # These lines will hit either the top or the right of the Voronoi region
+                if 0 < theta_from_x_to_inf_point < math.pi / 2:
+                    # Intersection with the right
+                    if theta_from_x_to_inf_point < math.atan((voronoi_boundaries[1][1] - finite_vertex.y) /
+                                                             (voronoi_boundaries[1][0] - finite_vertex.x)):
+                        dx = voronoi_boundaries[1][0] - finite_vertex.x
+                        dy = dx * math.sin(theta_from_x_to_inf_point)
+                        end_point = (voronoi_boundaries[1][0], finite_vertex.y + dy)
+                    # Intersection with the top
+                    elif theta_from_x_to_inf_point > math.atan((voronoi_boundaries[1][1] - finite_vertex.y) /
+                                                               (voronoi_boundaries[1][0] - finite_vertex.x)):
+                        dy = voronoi_boundaries[1][1] - finite_vertex.y
+                        dx = dy / math.sin(theta_from_x_to_inf_point)
+                        end_point = (finite_vertex.x + dx, voronoi_boundaries[1][1])
+                    # Intersection with the top right point
+                    else:
+                        end_point = voronoi_boundaries[1]
+
+                # These lines will hit either the top or the left
+                elif math.pi / 2 < theta_from_x_to_inf_point < math.pi:
+                    # Intersection with the top
+                    if theta_from_x_to_inf_point < math.atan((voronoi_boundaries[1][1] - finite_vertex.y) /
+                                                             (voronoi_boundaries[0][0] - finite_vertex.x)):
+                        dy = voronoi_boundaries[1][1] - finite_vertex.y
+                        dx = dy / math.sin(math.pi - theta_from_x_to_inf_point)
+                        end_point = (finite_vertex.x - dx, voronoi_boundaries[1][1])
+                    # Intersection with the left
+                    elif theta_from_x_to_inf_point > math.atan((voronoi_boundaries[1][1] - finite_vertex.y) /
+                                                               (voronoi_boundaries[0][0] - finite_vertex.x)):
+                        dx = finite_vertex.x - voronoi_boundaries[0][0]
+                        dy = dx * math.sin(math.pi - theta_from_x_to_inf_point)
+                        end_point = (voronoi_boundaries[0][0], finite_vertex.y + dy)
+                    # Intersection with the top left point
+                    else:
+                        end_point = (voronoi_boundaries[0][0], voronoi_boundaries[1][1])
+
+                # These lines will hit either the left or the bottom
+                elif math.pi < theta_from_x_to_inf_point < 3 * math.pi / 2:
+                    # Intersection with the left
+                    if theta_from_x_to_inf_point < math.atan((voronoi_boundaries[0][1] - finite_vertex.y) /
+                                                             (voronoi_boundaries[0][0] - finite_vertex.x)):
+                        dx = finite_vertex.x - voronoi_boundaries[0][0]
+                        dy = dx * math.sin(theta_from_x_to_inf_point - math.pi)
+                        end_point = (voronoi_boundaries[0][0], finite_vertex.y - dy)
+                    # Intersection with the bottom
+                    elif theta_from_x_to_inf_point > math.atan((voronoi_boundaries[0][1] - finite_vertex.y) /
+                                                               (voronoi_boundaries[0][0] - finite_vertex.x)):
+                        dy = finite_vertex.y - voronoi_boundaries[0][1]
+                        dx = dy / math.sin(3 * math.pi / 2 - theta_from_x_to_inf_point)
+                        end_point = (finite_vertex.x - dx, voronoi_boundaries[0][1])
+                    # Intersection with the bottom left point
+                    else:
+                        end_point = voronoi_boundaries[0]
+
+                # These lines will hit either the bottom or the right
+                elif 3 * math.pi / 2 < theta_from_x_to_inf_point < 2 * math.pi:
+                    # Intersection with the bottom
+                    if theta_from_x_to_inf_point < math.atan((voronoi_boundaries[0][1] - finite_vertex.y) /
+                                                             (voronoi_boundaries[1][0] - finite_vertex.x)):
+                        dy = finite_vertex.y - voronoi_boundaries[0][1]
+                        dx = dy / math.sin(theta_from_x_to_inf_point - 3 * math.pi / 2)
+                        end_point = (finite_vertex.x + dx, voronoi_boundaries[0][1])
+                    # Intersection with the right
+                    elif theta_from_x_to_inf_point > math.atan((voronoi_boundaries[0][1] - finite_vertex.y) /
+                                                               (voronoi_boundaries[1][0] - finite_vertex.x)):
+                        dx = voronoi_boundaries[1][0] - finite_vertex.x
+                        dy = dx * math.sin(2 * math.pi - theta_from_x_to_inf_point)
+                        end_point = (voronoi_boundaries[1][0], finite_vertex.y - dy)
+                    # Intersection with the bottom right point
+                    else:
+                        end_point = (voronoi_boundaries[1][0], voronoi_boundaries[0][1])
+
+                else:
+                    print("Dude what")
+                    end_point = ("holy", "Crap")  # I'm tired, forgive me.
+
+                # Create the vertex
+                new_vertex_uid = voronoi_graph.add_vertex(end_point)
+
+                # Connect the vertex to the finite vertex
+                voronoi_graph.connect_vertices(finite_vertex, voronoi_graph.vertices[new_vertex_uid])
+
+                # Add each vertex to the regions
+                vertex_voronoi_regions[ridge_points[0]].add(finite_vertex)
+                vertex_voronoi_regions[ridge_points[0]].add(voronoi_graph.vertices[new_vertex_uid])
+                vertex_voronoi_regions[ridge_points[1]].add(finite_vertex)
+                vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[new_vertex_uid])
+
+        # Close off the regions on the edge of the Voronoi regions TODO <-- that
 
     # The default update method. Returns a value describing if the Graph was able to update successfully.
     def update(self):

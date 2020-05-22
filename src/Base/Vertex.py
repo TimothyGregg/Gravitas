@@ -1,7 +1,7 @@
 class Vertex:
     # _uid = 0    # The underscore is python's way of denoting "private" (even though private doesn't really exist)
 
-    def __init__(self, x: int, y: int, uid: int):
+    def __init__(self, x, y, uid: int):
         # Set member variables
         self.x = x
         self.y = y
