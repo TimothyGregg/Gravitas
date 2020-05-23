@@ -362,6 +362,7 @@ class Graph:
                 else:
                     print("Dude what")
                     end_point = ("holy", "Crap")  # I'm tired, forgive me.
+                    raise RuntimeError("What")
 
                 # Create the vertex
                 new_vertex_uid = voronoi_graph.add_vertex(end_point)
