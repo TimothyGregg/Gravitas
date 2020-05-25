@@ -5,19 +5,24 @@ import statistics
 
 
 class AntGraph(Graph):
-	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7
-				 , seed_point: Tuple[int, int] = None):
+	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7,
+														seed_point: Tuple[int, int] = None):
 		# Graph super constructor
 		super().__init__()
 
-		# Member variables TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
+		# Member variables for Graph generation
+		# TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
 		self.size_x = size_x
 		self.size_y = size_y
 		self.vertex_radius = vertex_radius
 		self.sparcity = sparcity
-		self.edge_lengths = []
 		self.seed_point = seed_point
 
+		# Member variables for gameplay
+		# A dict... TODO finish this comment
+		self.teams = {}
+
+		# Generate the actual Graph elements
 		self.add_vertices()
 		self.add_edges()
 
@@ -48,17 +53,18 @@ class AntGraph(Graph):
 		print("Adding Edges...")
 		# Generate the Delauney edges using the Voronoi method and connect them
 		edge_dict = self.get_voronoi_diagram_ridge_lines()
+		edge_lengths = []
 		for vertex1_uid in edge_dict:
 			for vertex2_uid in edge_dict[vertex1_uid]:
 				new_edge_uid = self.connect_vertices(self.vertices[vertex1_uid], self.vertices[vertex2_uid])
-				self.edge_lengths.append(self.edges[new_edge_uid].length)
+				edge_lengths.append(self.edges[new_edge_uid].length)
 
 		print("\tCulling Edges...")
 		# Cull edges that are too long (typically along the edges, with crazy-big circles
 		# TODO this may be able to be rolled in to part of the computation of the Voronoi regions (i.e. the regions
 		#  that extent to infinity are probably those with long edges spanning the exterior of the graph)
-		average = sum(self.edge_lengths) / len(self.edge_lengths)
-		st_dev = statistics.stdev(self.edge_lengths)
+		average = sum(edge_lengths) / len(edge_lengths)
+		st_dev = statistics.stdev(edge_lengths)
 		all_edge_keys = list(self.edges.keys())
 		for edge_uid in all_edge_keys:
 
@@ -84,6 +90,9 @@ class AntGraph(Graph):
 		for edge_uid in to_remove:
 			if not self.is_bridge(edge_uid):
 				self.disconnect_edge(edge_uid)
+
+	def add_teams(self, num_teams: int):
+
 
 	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
 	def desmos_dump(self):

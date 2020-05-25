@@ -11,8 +11,17 @@ class Graph:
         # Graph Properties
         self._vertex_uid = 0
         self._edge_uid = 0
+
+        # A dict of the Vertices of the graph, keyed by their UIDs
+        # vertex.uid : Vertex
         self.vertices = {}
+
+        # A dict of the Edges of the graph, keyed by their UIDs
+        # edge.uid : Edge
         self.edges = {}
+
+        # A dict of lists of the adjacent vertex UIDs of each Vertex, keyed by the vertex UID
+        # vertex.uid : [adjacent vertex UIDs]
         self.adjacency_list = {}  # A classic graph adjacency list for easy connectivity checks
 
         # Things to help out the Voronoi Generation
