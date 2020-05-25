@@ -84,6 +84,7 @@ def incremental_graph_window(size_x: int, size_y: int, vertex_radius: int, fulls
 
 def run(display: DisplayHandler):
 	show_board(display, display.board)
+	paused = False
 	while True:
 		if pygame.mouse.get_pressed()[0]:
 			mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -94,10 +95,15 @@ def run(display: DisplayHandler):
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
 					return
+				if event.key == pygame.K_SPACE:
+					paused = not paused
 				else:
-					# TODO Throw a "Generating..." splash here
-					show_new_board(display)
-					update_clock = 0
+					if paused:
+						update(display)
+					else:
+						# TODO Throw a "Generating..." splash here
+						show_new_board(display)
+						update_clock = 0
 			elif event.type == pygame.VIDEORESIZE:
 				# This handles resizing the graph to fit the window. Currently it stretches to fill. I think I want
 				# to keep it proportional and just fit it inside the window. TODO: <-- That
@@ -106,16 +112,21 @@ def run(display: DisplayHandler):
 				else:
 					display.window = pygame.display.set_mode(event.dict['size'], pygame.RESIZABLE)
 				show_board(display, display.board)
-		# This is where we put the update code
-		updated_successfully = display.board.update()
-		if updated_successfully:
-			show_board(display, display.board)
-			time.sleep(time_stop / 1000)  # Time stop in ms
-		else:
-			# display.board.get_voronoi_regions()
-			time.sleep(2)
-			show_new_board(display)
-		pygame.display.flip()  # Update the whole window
+		if not paused:
+			update(display)
+
+
+def update(display: DisplayHandler):
+	# This is where we put the update code
+	updated_successfully = display.board.update()
+	if updated_successfully:
+		show_board(display, display.board)
+		time.sleep(time_stop / 1000)  # Time stop in ms
+	else:
+		# display.board.get_voronoi_regions()
+		time.sleep(2)
+		show_new_board(display)
+	pygame.display.flip()  # Update the whole window
 
 
 def show_new_board(display, seed_point: Tuple[int, int] = None):
@@ -146,7 +157,8 @@ def show_board(display: DisplayHandler, board: Graph):
 
 		# Fun color-changing nodes based on connections (best in Incremental Graph)
 		num_connected = len(board.adjacency_list[vertex_uid])
-		# 8 is the max because if there are 8 connections, the Vertex is connected to all the vertices in its adjacent cells in the backing grid for the generator. I think.
+		# 8 is the max because if there are 8 connections, the Vertex is connected to all the vertices in its
+		# adjacent cells in the backing grid for the generator. I think.
 		pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 5, tuple([(255 * num_connected / 8)] * 3))
 
 	# Text
