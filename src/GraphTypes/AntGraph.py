@@ -19,7 +19,8 @@ class AntGraph(Graph):
 		self.seed_point = seed_point
 
 		# Member variables for gameplay
-		# A dict... TODO finish this comment
+		# A dict containing the teams, keyed by team UID
+		# team.uid : Team
 		self.teams = {}
 
 		# Generate the actual Graph elements
@@ -92,7 +93,7 @@ class AntGraph(Graph):
 				self.disconnect_edge(edge_uid)
 
 	def add_teams(self, num_teams: int):
-
+		pass
 
 	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
 	def desmos_dump(self):
