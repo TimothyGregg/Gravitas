@@ -173,16 +173,23 @@ class ColorGenerator:
 		# Set of checked-out colors for easy checked-out-ness checking
 		self.checked_out = set()
 
+		# Set of priority colors to return first
+		self.priority_colors = set()
+		for color_tuple in color_dict["Fun"]:
+			self.priority_colors.add(color_tuple)
+
 		# Set of all available colors
 		self.available_colors = set()
 		# Build the available_colors set
 		# Iterate through the different color sets
 		for set_key in color_dict:
-			# If the color set contains a dict (i.e. it isn't just a single color
+			# If the color set contains a dict (i.e. it isn't just a single color)
 			if type(set_key) == str:
 				# Iterate through each of the color tuples found in the color set and add them all to available_colors
 				for color_tuple in color_dict[set_key]:
-					self.available_colors.add(color_tuple)
+					# Do not add the colors that have already been added to self.priority colors
+					if color_tuple not in self.priority_colors:
+						self.available_colors.add(color_tuple)
 
 	# Return a boolean describing if the ColorGenerator has more colors to give
 	def has_more(self):
@@ -193,19 +200,20 @@ class ColorGenerator:
 		if color_rgb in self.checked_out:
 			raise RuntimeError("Color \"" + lookup(color_rgb) + "\" already checked out")
 		self.checked_out.add(color_rgb)
-		self.available_colors.remove(color_rgb)
+		if color_rgb in self.priority_colors:
+			self.priority_colors.remove(color_rgb)
+		elif color_rgb in self.available_colors:
+			self.available_colors.remove(color_rgb)
 
 	# Ask the ColorGenerator for a new color
 	# TODO This assumes that the generator has_more(). Maybe set up validation?
 	def request(self):
-		# Return the fun colors first
-		if len(self.checked_out) < 7:
-			selection = random.choice(list(color_dict["Fun"].keys()))
-			while selection in self.checked_out:
-				selection = random.choice(list(color_dict["Fun"].keys()))
+		# Return the priority colors first
+		if len(self.priority_colors) > 0:
+			selection = random.sample(self.priority_colors, 1)[0]
 			self.checkout(selection)
 			return selection
-		# If we've placed all the fun colors already, place the rest
+		# If we've placed all the priority colors already, place the rest
 		else:
 			selection = random.sample(self.available_colors, 1)[0]
 			self.checkout(selection)
@@ -223,21 +231,3 @@ def lookup(color_rgb: Tuple[int, int, int]):
 			except KeyError:
 				pass
 	return "Unknown Color"
-
-
-def temp_parse(string: str):
-	start = 0
-	start_brace = string.find("{", start)
-	while start_brace != -1:
-		end_brace = string.find("}", start_brace)
-		start_quote = string.find("\"", start)
-		end_quote = string.find("\"", start_quote + 1)
-		print("\t\t(" + string[start_brace + 1:end_brace] + "): " + string[start_quote:end_quote + 1] + ",")
-		start = end_quote + 1
-		start_brace = string.find("{", start)
-
-
-c = ColorGenerator()
-while c.has_more():
-	t = c.request()
-	print(str(t) + ":" + (int((16 - len(str(t)) + 2) / 4) + 1) * "\t" + lookup(t))

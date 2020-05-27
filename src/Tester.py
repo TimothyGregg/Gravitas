@@ -1,6 +1,6 @@
 from Display.DisplayHandler import *
 
-antgraph_window(size_x=1920, size_y=1080, vertex_radius=25, fullscreen=False, sparcity=0.4)
+antgraph_window(size_x=1920, size_y=1080, vertex_radius=50, fullscreen=False, sparcity=0.7)
 # for _ in range(100):
 # 	test = AntGraph(200, 200, 5, 1.0)
 	# test.get_voronoi_regions()

@@ -168,10 +168,11 @@ def show_board(display: DisplayHandler, board: Graph):
 				if vertex_uid in board.teams[team_uid].controlled_vertices:
 					pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 20, board.teams[team_uid].color)
 
-	# Text
-	# if len(board.vertices) < 500:
-	# 	text_surface = display.font.render(str(vertex_uid), True, ORANGE)  # string, antialias, then color
-	# 	board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
+		# Text
+		if len(board.vertices) < 500:
+			# arguments are: string, antialias, then color
+			text_surface = display.font.render("(" + str(vertex.x) + ", " + str(vertex.y) + ")", True, ORANGE)
+			board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
 
 	# Edges
 	for edge_uid in board.edges:

@@ -33,7 +33,6 @@ class AntGraph(Graph):
 
 	# Grab all the points for the graph from a Poisson-Disc point generator
 	def add_vertices(self):
-		print("Adding vertexs...")
 		all_points = []
 		# TODO Shrinking them here messes up the rendering on really small boards. This seems like such a minor issue
 		#  that I'm going to ignore it until later.
@@ -55,7 +54,6 @@ class AntGraph(Graph):
 			self.add_vertex(point_tuple)
 
 	def add_edges(self):
-		print("Adding Edges...")
 		# Generate the Delauney edges using the Voronoi method and connect them
 		edge_dict = self.get_voronoi_diagram_ridge_lines()
 		edge_lengths = []
@@ -64,7 +62,6 @@ class AntGraph(Graph):
 				new_edge_uid = self.connect_vertices(self.vertices[vertex1_uid], self.vertices[vertex2_uid])
 				edge_lengths.append(self.edges[new_edge_uid].length)
 
-		print("\tCulling Edges...")
 		# Cull edges that are too long (typically along the edges, with crazy-big circles
 		# TODO this may be able to be rolled in to part of the computation of the Voronoi regions (i.e. the regions
 		#  that extent to infinity are probably those with long edges spanning the exterior of the graph)
@@ -76,7 +73,6 @@ class AntGraph(Graph):
 			if self.edges[edge_uid].length > average + st_dev:
 				self.disconnect_edge(edge_uid)
 
-		print("\tInducing Sparcity...\tSparcity: " + str(self.sparcity) + ", vertexs: " + str(len(self.vertices)))
 		# remove random edges to generate edge sparcity
 		all_edge_keys = list(self.edges.keys())
 		to_remove = []
