@@ -1,7 +1,10 @@
 from Base.Graph import *
+from Ants.Team import *
 from Toolbox.PoissonGenerator import PoissonGenerator
+from Toolbox.ColorGenerator import ColorGenerator
 import random
 import statistics
+from typing import Dict
 
 
 class AntGraph(Graph):
@@ -21,11 +24,12 @@ class AntGraph(Graph):
 		# Member variables for gameplay
 		# A dict containing the teams, keyed by team UID
 		# team.uid : Team
-		self.teams = {}
+		self.teams: Dict[int, Team] = {}
 
 		# Generate the actual Graph elements
 		self.add_vertices()
 		self.add_edges()
+		self.add_teams(7)
 
 	# Grab all the points for the graph from a Poisson-Disc point generator
 	def add_vertices(self):
@@ -92,8 +96,41 @@ class AntGraph(Graph):
 			if not self.is_bridge(edge_uid):
 				self.disconnect_edge(edge_uid)
 
+	# Add teams to the board
 	def add_teams(self, num_teams: int):
-		pass
+		# Method to pick a starting location within the graph ot place the team.
+		# TODO determine spacing between teams so that they do not start too close together
+		def select_starting_position():
+			# Try to pick a vertex until all are determined to be bad
+			tries = []
+			while len(tries) < len(self.vertices):
+				# Pick a random vertex to check if it has been used already
+				picked_uid = random.choice(list(self.vertices.keys()))
+				good = True
+				# Check if the picked vertex uid is in any of the teams vertices dicts
+				for team_uid_it in self.teams:
+					if picked_uid in self.teams[team_uid_it].controlled_vertices:
+						# If the vertex is already controlled by a team, flag it as no good and add it to the
+						# already-tried uid list
+						good = False
+						tries.append(picked_uid)
+						break
+				# If the vertex uid wasn't in use, return the vertex itself
+				if good:
+					return self.vertices[picked_uid]
+			# If a good vertex cannot be found, return None
+			return None
+
+		c = ColorGenerator()
+		# Generate the teams
+		for team_uid in range(num_teams):
+			# If the color generator has a unique color available for the new team to be generated, continue. If not,
+			# we're done making teams.
+			# Also, if we've added as many teams as we have vertices, we cannot possibly add any more, and we're done
+			# making teams
+			if c.has_more() and len(self.teams) < len(self.vertices):
+				self.teams[team_uid] = Team(team_uid, c.request(), self)
+				self.teams[team_uid].add_vertex(select_starting_position())
 
 	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
 	def desmos_dump(self):

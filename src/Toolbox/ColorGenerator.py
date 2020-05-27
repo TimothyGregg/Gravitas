@@ -9,8 +9,8 @@ color_dict = {
 		(45, 15, 245): "Dad Purple",
 		(255, 69, 0): "Orangered",
 		(0, 255, 255): "Cyan",
-		(124, 252, 0): "Fake Neutral",
-		(124, 252, 0): "Void",
+		(100, 100, 100): "Fake Neutral",
+		(26, 22, 22): "Void",
 		(124, 252, 0): "Lawn Green",
 		(138, 43, 226): "Blue Violet"
 	},
@@ -184,20 +184,32 @@ class ColorGenerator:
 				for color_tuple in color_dict[set_key]:
 					self.available_colors.add(color_tuple)
 
+	# Return a boolean describing if the ColorGenerator has more colors to give
 	def has_more(self):
 		return len(self.available_colors) > 0
 
+	# Record that a color has been requested and used from the ColorGenerator
 	def checkout(self, color_rgb: Tuple[int, int, int]):
 		if color_rgb in self.checked_out:
 			raise RuntimeError("Color \"" + lookup(color_rgb) + "\" already checked out")
 		self.checked_out.add(color_rgb)
 		self.available_colors.remove(color_rgb)
-		return color_rgb
 
+	# Ask the ColorGenerator for a new color
+	# TODO This assumes that the generator has_more(). Maybe set up validation?
 	def request(self):
-		selection = random.sample(self.available_colors, 1)[0]
-		self.checkout(selection)
-		return selection
+		# Return the fun colors first
+		if len(self.checked_out) < 7:
+			selection = random.choice(list(color_dict["Fun"].keys()))
+			while selection in self.checked_out:
+				selection = random.choice(list(color_dict["Fun"].keys()))
+			self.checkout(selection)
+			return selection
+		# If we've placed all the fun colors already, place the rest
+		else:
+			selection = random.sample(self.available_colors, 1)[0]
+			self.checkout(selection)
+			return selection
 
 
 def lookup(color_rgb: Tuple[int, int, int]):

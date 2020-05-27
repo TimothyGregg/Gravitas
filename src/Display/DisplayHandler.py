@@ -4,6 +4,7 @@ import pygame
 from pygame import gfxdraw
 import time
 from typing import Tuple
+from Toolbox.ColorGenerator import color_dict
 
 
 BASE03 = (0, 43, 54)
@@ -153,13 +154,19 @@ def show_board(display: DisplayHandler, board: Graph):
 		# This is vertex_radius as seen by the Poisson Generator. This is the exclusion radius.
 		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 2 * board.vertex_radius, RED)  # 2x radius
 		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, board.vertex_radius, BASE01)  # True radius
-		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, BASE0)  # Center circle
+		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, (100, 100, 100))  # Center circle
 
 		# Fun color-changing nodes based on connections (best in Incremental Graph)
 		num_connected = len(board.adjacency_list[vertex_uid])
 		# 8 is the max because if there are 8 connections, the Vertex is connected to all the vertices in its
 		# adjacent cells in the backing grid for the generator. I think.
-		pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 5, tuple([(255 * num_connected / 8)] * 3))
+		# pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 5, tuple([(255 * num_connected / 8)] * 3))
+
+		# Display the colors of the vertices if they are owned by a team
+		if type(board) == AntGraph:
+			for team_uid in board.teams:
+				if vertex_uid in board.teams[team_uid].controlled_vertices:
+					pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 20, board.teams[team_uid].color)
 
 	# Text
 	# if len(board.vertices) < 500:
