@@ -7,7 +7,11 @@ import math
 
 
 class Graph:
+
     def __init__(self):
+        """
+        The constructor for Graph class.
+        """
         # Graph Properties
         self._vertex_uid = 0
         self._edge_uid = 0
@@ -40,6 +44,12 @@ class Graph:
         # self.grid = [[GridSquare() for _ in range(10)] for _ in range(10)]  # Initialize to 10x10 grid.
 
     def __str__(self):
+        """
+        The tostring method of the Graph class.
+
+        Returns:
+            A sting representation of the Graph object.
+        """
         out_str = ""
         for vertex_uid in self.vertices:
             out_str += str(self.vertices[vertex_uid]) + "\n"
@@ -47,9 +57,18 @@ class Graph:
             out_str += str(self.edges[edge_uid]) + "\n"
         return out_str
 
-    # Add a vertex to the graph. Ensures that a vertex is not placed on top of a previous vertex. Return the uid of
-    # the Vertex that was just created
-    def add_vertex(self, location: Tuple, vertex_preset_uid: int = None):
+    def add_vertex(self, location: Tuple[int, int], vertex_preset_uid: int = None):
+        """
+        Adds a Vertex to the Graph. Ensures that a Vertex is not placed on top of an already-existing Vertex.
+
+        Args:
+            location: A two-value Tuple containing the X- and Y-coordinates of the Vertex to be added.
+            vertex_preset_uid: An optional argument for when the Vertex UID is known. Use sparingly; this is
+            probably best used when a Vertex has just been removed and is being re-added
+
+        Returns:
+            The UID of the Vertex that was just added to the Graph.
+        """
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
@@ -75,9 +94,19 @@ class Graph:
 
         return new_vertex.uid
 
-    # Create an Edge connecting two vertices and note the connection in the adjacency list. Return the uid of the
-    # Edge that was just created
     def connect_vertices(self, vertex1: Vertex, vertex2: Vertex, edge_uid: int = None):
+        """
+        Connects two Vertices in the Graph with an Edge. The order of the Vertices has been designed to not matter.
+
+        Args:
+            vertex1: One of the Vertices to be connected.
+            vertex2: The other Vertex to be connected.
+            edge_uid: An optional argument for when the Edge UID is known. Use sparingly; this is probably best used
+            when a Vertex has just been removed and is being re-added.
+
+        Returns:
+            The UID of the newly-created Edge object connecting the two specified Vertices.
+        """
         if edge_uid is None:
             new_edge = Edge(vertex1, vertex2, self._edge_uid)
             self._edge_uid += 1
@@ -89,8 +118,17 @@ class Graph:
         self.adjacency_list[vertex2.uid].append(vertex1.uid)
         return new_edge.uid
 
-    # delete the Edge connecting two vertices
     def disconnect_edge(self, edge_uid: int):
+        """
+        Disconnects an Edge on the graph, removing all references of the connection from the Graph, including the
+        Edge object itself and the entries in the Graph adjacency list.
+
+        Args:
+            edge_uid: The UID of the Edge to be removed.
+
+        Returns:
+            A boolean indicating that the execution succeeded.
+        """
         edge = self.edges[edge_uid]
         vertex1 = edge.v1
         vertex2 = edge.v2
@@ -98,19 +136,33 @@ class Graph:
         self.adjacency_list[vertex2.uid].remove(vertex1.uid)
         if edge_uid in self.edges:
             del self.edges[edge_uid]
+            return True
         else:
             raise RuntimeError("You goofed on the key for an Edge removal.")
 
-    # Return a dict, with {vertex_uid: vertex (x, y) position tuple}
     def get_vertex_position_dict(self):
+        """
+        Generates and returns a dict of the vertex positions within the Graph.
+
+        Returns:
+            A vertex position dict with the format {vertex_uid: vertex (x, y) position tuple}
+        """
         vertex_position_dict= {}
         for vertex_uid in self.vertices:
             vertex_position_dict[vertex_uid] = (self.vertices[vertex_uid].x, self.vertices[vertex_uid].y)
         return vertex_position_dict
 
-    # Return a tuple of tuples, describing the bottom left and top right (in xy-coordinates) of the smallest possible
-    # bounding box for all points
     def get_boundary_points(self):
+        """
+        Returns the outer-most X- and Y-coordinates of the graph in the form of a bottom-left and a top-right
+        position tuple. These positions do not represent the outermost Vertices, but instead describe the smallest
+        bounding box that can be drawn around the Graph.
+
+        Returns:
+            A tuple of two tuples, the first containing the (x, y)-coordinates of the bottom-left point of the
+            bounding box of the Graph and the second containing the (x, y)-coordinates of the top-left point of the
+            same box.
+        """
         x_min = 0
         x_max = 0
         y_min = 0
@@ -130,9 +182,14 @@ class Graph:
 
         return (x_min, y_min), (x_max, y_max)
 
-    # Reference: https://www.geeksforgeeks.org/check-removing-given-edge-disconnects-given-graph/
-    # Return True if the graph is connected; otherwise, False
     def is_connected(self):
+        """
+        Determines if the Graph is connected, i.e. if all points within the Graph can be reached from all other points.
+        Reference: https://www.geeksforgeeks.org/check-removing-given-edge-disconnects-given-graph/
+
+        Returns:
+            A boolean value describing if the Graph is connected (True) or not (False).
+        """
         # Make the visited list and do a DFS
         visited = {}
         stack = [self.vertices[0].uid]
@@ -152,8 +209,16 @@ class Graph:
         # True if all vertices reachable from the first, otherwise False
         return all(list(visited[vertex_uid] for vertex_uid in visited))
 
-    # Indicates is an edge_uid describes an edge that, when removed, will make the board unconnected
     def is_bridge(self, edge_uid):
+        """
+        Determines is an Edge is a "bridge"; that is, if removing the Edge would cause the Graph to become disconnected.
+
+        Args:
+            edge_uid: The UID of the Edge to be evaluated for bridge-status.
+
+        Returns:
+            A boolean describing if the Edge is a bridge (True) or not (False).
+        """
         # Remove the Edge
         n1 = self.edges[edge_uid].v1
         n2 = self.edges[edge_uid].v2
@@ -168,9 +233,15 @@ class Graph:
         # Indicate if that Edge removal led to an unconnected board
         return not connected
 
-    # Return a list of all vertex connections to be made as a pseudo-adjacency list, but with each connection appearing
-    # only once (i.e. if Vertex 1 is connected to Vertex 2, Vertex 2 won't show as also being connected to Vertex 1)
     def get_voronoi_diagram_ridge_lines(self):
+        """
+            Return a list of all vertex connections to be made as a pseudo-adjacency list, but with each connection
+            appearing only once (i.e. if Vertex 1 is connected to Vertex 2, Vertex 2 won't show as also being
+            connected to Vertex 1)
+
+        Returns:
+            A list of all Vertex connections to be made to
+        """
         # Someone else does all the fancy math for me
         vertex_position_dict = self.get_vertex_position_dict()
         # Create this list for reference down in the translation from voronoi ridge_points to UIDs to ensure that
@@ -194,6 +265,12 @@ class Graph:
         return vertex_connections
 
     def get_voronoi_regions(self):
+        """
+        This is... mayhem. TODO All of it.
+
+        Returns:
+            Something. I'm not sure yet. Something describing the Voronoi regions of the Graph.
+        """
         # Once again, someone else does all the fancy math for me
         vertex_position_dict = self.get_vertex_position_dict()
         voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))
@@ -386,7 +463,3 @@ class Graph:
                 vertex_voronoi_regions[ridge_points[1]].add(voronoi_graph.vertices[new_vertex_uid])
 
         # Close off the regions on the edge of the Voronoi regions TODO <-- that
-
-    # The default update method. Returns a value describing if the Graph was able to update successfully.
-    def update(self):
-        return True

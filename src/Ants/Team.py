@@ -1,13 +1,14 @@
 from Base.Vertex import Vertex
 from Ants.Node import Node
 from typing import Tuple
-from GraphTypes import AntGraph
+from BoardTypes import AntBoard
 
 
-# This is a team that will exist on an AntGraph. It manages the positions and decisions of a playable set of elements
+# This is a team that will exist on an AntBoard. It manages the positions and decisions of a playable set of elements
 # in an ant game.
 class Team:
-    def __init__(self, uid: int, color: Tuple[int, int, int], graph: AntGraph):
+
+    def __init__(self, uid: int, color: Tuple[int, int, int], graph: AntBoard):
         # Team UID
         self.uid = uid
 

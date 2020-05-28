@@ -1,5 +1,6 @@
 from Base.Graph import *
 from Ants.Team import *
+from Ants.Board import *
 from Toolbox.PoissonGenerator import PoissonGenerator
 from Toolbox.ColorGenerator import ColorGenerator
 import random
@@ -7,7 +8,7 @@ import statistics
 from typing import Dict
 
 
-class AntGraph(Graph):
+class AntBoard(Board):
 	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7,
 														seed_point: Tuple[int, int] = None):
 		# Graph super constructor

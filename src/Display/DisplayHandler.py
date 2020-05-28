@@ -1,11 +1,9 @@
-from GraphTypes.AntGraph import *
+from BoardTypes.AntBoard import *
 from GraphTypes.IncrementalGraph import *
 import pygame
 from pygame import gfxdraw
 import time
 from typing import Tuple
-from Toolbox.ColorGenerator import color_dict
-
 
 BASE03 = (0, 43, 54)
 BASE01 = (88, 110, 117)
@@ -70,15 +68,15 @@ def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool 
 
 def antgraph_window(size_x: int, size_y: int, vertex_radius: int, fullscreen: bool = False, sparcity: float = 1.0):
 
-	# Create the first GraphTypes and hand it to the pygame_wrapper
-	board = AntGraph(size_x, size_y, vertex_radius, sparcity)
+	# Create the first BoardTypes and hand it to the pygame_wrapper
+	board = AntBoard(size_x, size_y, vertex_radius, sparcity)
 	pygame_wrapper((size_x, size_y), board, fullscreen)
 
 
 def incremental_graph_window(size_x: int, size_y: int, vertex_radius: int, fullscreen: bool = False, sparcity: float =
 1.0):
 
-	# Create the first GraphTypes and hand it to the pygame_wrapper
+	# Create the first BoardTypes and hand it to the pygame_wrapper
 	board = IncrementalGraph(size_x, size_y, vertex_radius, sparcity)
 	pygame_wrapper((size_x, size_y), board, fullscreen)
 
@@ -131,8 +129,8 @@ def update(display: DisplayHandler):
 
 
 def show_new_board(display, seed_point: Tuple[int, int] = None):
-	if type(display.board) == AntGraph:
-		display.board = AntGraph(display.window.get_width(), display.window.get_height(),
+	if type(display.board) == AntBoard:
+		display.board = AntBoard(display.window.get_width(), display.window.get_height(),
 								 display.board.vertex_radius, display.board.sparcity, seed_point)
 	elif type(display.board) == IncrementalGraph:
 		display.board = IncrementalGraph(display.window.get_width(), display.window.get_height(),
@@ -163,7 +161,7 @@ def show_board(display: DisplayHandler, board: Graph):
 		# pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 5, tuple([(255 * num_connected / 8)] * 3))
 
 		# Display the colors of the vertices if they are owned by a team
-		if type(board) == AntGraph:
+		if type(board) == AntBoard:
 			for team_uid in board.teams:
 				if vertex_uid in board.teams[team_uid].controlled_vertices:
 					pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 20, board.teams[team_uid].color)
