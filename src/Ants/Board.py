@@ -10,6 +10,7 @@ class Board(Graph):
 		"""
 		Constructor for Board class.
 		"""
+
 		# Super Init call
 		super().__init__()
 
@@ -20,4 +21,5 @@ class Board(Graph):
 		Returns:
 			A boolean describing is the Board updated successfully.
 		"""
+
 		return True

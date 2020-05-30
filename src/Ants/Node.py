@@ -10,4 +10,5 @@ class Node:
         """
         Constructor for the Node class.
         """
+
         pass

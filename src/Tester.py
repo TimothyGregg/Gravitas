@@ -6,7 +6,7 @@ from Display.DisplayHandler import *
 	# test.get_voronoi_regions()
 # print(AntBoard(1920, 1080, 50, 1.0))
 
-incremental_graph_window(size_x=1080, size_y=720, vertex_radius=25, fullscreen=False, sparcity=1.0)
+incremental_graph_window(size_x=1080, size_y=720, vertex_radius=25, fullscreen=True, sparcity=1.0)
 
 # 5 is too small
 # 10 is neat

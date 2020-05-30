@@ -9,8 +9,26 @@ from typing import Dict
 
 
 class AntBoard(Board):
+	"""
+	A type of Board on which the Ant game is played. It contains all of the elements required to operate an instance
+	of an Ant game.
+	"""
+
 	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7,
 														seed_point: Tuple[int, int] = None):
+		"""
+		The constructor of the AntBoard class.
+
+		Args:
+			size_x: The maximum size of the AntBoard in the x-direction, positively from 0.
+			size_y: The maximum size of the AntBoard in the y-direction, positively from 0.
+			vertex_radius: The VISUAL radius of a vertex within the Board. Twice this value is the minimum distance
+				between two Vertices
+			sparcity: A fractional value describing the chance that, after fully generating, any given Edge will be
+				deleted (assuming the Edge itself is not a bridge).
+			seed_point: A tuple describing the initial point placed on the Board.
+		"""
+
 		# Graph super constructor
 		super().__init__()
 
@@ -32,8 +50,11 @@ class AntBoard(Board):
 		self.add_edges()
 		self.add_teams(7)
 
-	# Grab all the points for the graph from a Poisson-Disc point generator
 	def add_vertices(self):
+		"""
+		Grab all the points for the graph from a Poisson-Disc point generator
+		"""
+
 		all_points = []
 		# TODO Shrinking them here messes up the rendering on really small boards. This seems like such a minor issue
 		#  that I'm going to ignore it until later.
@@ -55,6 +76,10 @@ class AntBoard(Board):
 			self.add_vertex(point_tuple)
 
 	def add_edges(self):
+		"""
+		Add all Delauney edges to the Board based on the position of the Vertices.
+		"""
+
 		# Generate the Delauney edges using the Voronoi method and connect them
 		edge_dict = self.get_voronoi_diagram_ridge_lines()
 		edge_lengths = []
@@ -93,11 +118,22 @@ class AntBoard(Board):
 			if not self.is_bridge(edge_uid):
 				self.disconnect_edge(edge_uid)
 
-	# Add teams to the board
 	def add_teams(self, num_teams: int):
-		# Method to pick a starting location within the graph ot place the team.
-		# TODO determine spacing between teams so that they do not start too close together
-		def select_starting_position():
+		"""
+		Add the Teams to the Board. TODO Currently a naive implementation
+		Args:
+			num_teams: The number of Teams to attempt to add to the Board.
+		"""
+
+		def select_a_starting_position():
+			"""
+			Method to pick a starting location for a Team within the graph.
+			TODO determine spacing between teams so that they do not start too close together.
+
+			Returns:
+				The Vertex that has been picked as a valid starting position.
+			"""
+
 			# Try to pick a vertex until all are determined to be bad
 			tries = []
 			while len(tries) < len(self.vertices):
@@ -127,14 +163,23 @@ class AntBoard(Board):
 			# making teams
 			if c.has_more() and len(self.teams) < len(self.vertices):
 				self.teams[team_uid] = Team(team_uid, c.request(), self)
-				self.teams[team_uid].add_vertex(select_starting_position())
+				self.teams[team_uid].add_vertex(select_a_starting_position())
 
-	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
 	def desmos_dump(self):
+		"""
+		This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing.
+		Somewhat deprecated now that I have a visualization tool, but sometimes helpful for sneaky-small math problems.
+
+		Returns:
+			A string representation of the Board that can be copy-and-pasted into the calculator.
+		"""
+
+		out_str = ""
 		for vertex_uid in self.vertices:
 			vertex = self.vertices[vertex_uid]
-			print("(" + str(vertex.x) + ", " + str(vertex.y) + ")")
-			print("(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2")
+			out_str += "(" + str(vertex.x) + ", " + str(vertex.y) + ")"
+			out_str += "(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2"
 		for edge in self.edges:
-			print("((1-t)" + str(edge.v1.x) + "+t*" + str(edge.v2.x) + ",(1-t)" + str(edge.v1.y) + "+t*" + str(
-				edge.v2.y) + ")")
+			out_str += "((1-t)" + str(edge.v1.x) + "+t*" + str(edge.v2.x) + ",(1-t)" + str(edge.v1.y) + "+t*" + str(
+				edge.v2.y) + ")"
+		return out_str

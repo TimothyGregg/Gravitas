@@ -7,11 +7,17 @@ import math
 
 
 class Graph:
+    """
+    A class that describes a Graph in the mathematical sense of the word. A Graph contains Vertices which connect to
+    other Vertices along Edges. This class is the parent of the Boards used in the Ant game, as it provides the base
+    storage of the "map" on which the game is played.
+    """
 
     def __init__(self):
         """
         The constructor for Graph class.
         """
+
         # Graph Properties
         self._vertex_uid = 0
         self._edge_uid = 0
@@ -50,6 +56,7 @@ class Graph:
         Returns:
             A sting representation of the Graph object.
         """
+
         out_str = ""
         for vertex_uid in self.vertices:
             out_str += str(self.vertices[vertex_uid]) + "\n"
@@ -69,6 +76,7 @@ class Graph:
         Returns:
             The UID of the Vertex that was just added to the Graph.
         """
+
         for vertex_uid in self.vertices:
             if self.vertices[vertex_uid].x == location[0] and self.vertices[vertex_uid].y == location[1]:
                 raise RuntimeError("Vertex already at (" + str(location[0]) + ", " + str(location[1]) + ") in graph")
@@ -107,6 +115,7 @@ class Graph:
         Returns:
             The UID of the newly-created Edge object connecting the two specified Vertices.
         """
+
         if edge_uid is None:
             new_edge = Edge(vertex1, vertex2, self._edge_uid)
             self._edge_uid += 1
@@ -129,6 +138,7 @@ class Graph:
         Returns:
             A boolean indicating that the execution succeeded.
         """
+
         edge = self.edges[edge_uid]
         vertex1 = edge.v1
         vertex2 = edge.v2
@@ -147,6 +157,7 @@ class Graph:
         Returns:
             A vertex position dict with the format {vertex_uid: vertex (x, y) position tuple}
         """
+
         vertex_position_dict= {}
         for vertex_uid in self.vertices:
             vertex_position_dict[vertex_uid] = (self.vertices[vertex_uid].x, self.vertices[vertex_uid].y)
@@ -163,6 +174,7 @@ class Graph:
             bounding box of the Graph and the second containing the (x, y)-coordinates of the top-left point of the
             same box.
         """
+
         x_min = 0
         x_max = 0
         y_min = 0
@@ -190,6 +202,7 @@ class Graph:
         Returns:
             A boolean value describing if the Graph is connected (True) or not (False).
         """
+
         # Make the visited list and do a DFS
         visited = {}
         stack = [self.vertices[0].uid]
@@ -219,6 +232,7 @@ class Graph:
         Returns:
             A boolean describing if the Edge is a bridge (True) or not (False).
         """
+
         # Remove the Edge
         n1 = self.edges[edge_uid].v1
         n2 = self.edges[edge_uid].v2
@@ -242,6 +256,7 @@ class Graph:
         Returns:
             A list of all Vertex connections to be made to
         """
+
         # Someone else does all the fancy math for me
         vertex_position_dict = self.get_vertex_position_dict()
         # Create this list for reference down in the translation from voronoi ridge_points to UIDs to ensure that
@@ -271,6 +286,7 @@ class Graph:
         Returns:
             Something. I'm not sure yet. Something describing the Voronoi regions of the Graph.
         """
+
         # Once again, someone else does all the fancy math for me
         vertex_position_dict = self.get_vertex_position_dict()
         voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))

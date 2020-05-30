@@ -1,10 +1,11 @@
-from BoardTypes.AntBoard import *
+from Ants.BoardTypes.AntBoard import *
 from GraphTypes.IncrementalGraph import *
 import pygame
 from pygame import gfxdraw
 import time
 from typing import Tuple
 
+# Some basic colors that were used early-on in debugging. They are components of the "Solarized" theme.
 BASE03 = (0, 43, 54)
 BASE01 = (88, 110, 117)
 BASE0 = (131, 148, 150)
@@ -17,20 +18,49 @@ time_stop = 20
 
 
 class DisplayHandler:
+	"""
+	A class for managing the pygame display process.
+	"""
+
 	def __init__(self):
+		"""
+		DisplayHandler constructor.
+		"""
+
 		self.window = None
 		self.font = None
 		self.board = None
 		self.fullscreen = None
 
 	def give_window(self, window):
+		"""
+		Setter for the DisplayHandler window attribute.
+		Args:
+			window: The window object to be set.
+		"""
+
 		self.window = window
 
 	def give_font(self, font):
+		"""
+		Setter for the DisplayHandler font attribute.
+		Args:
+			font: The font object to be set.
+		"""
+
 		self.font = font
 
 
 def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool = True):
+	"""
+	The loop-containing method for the pygame display process.
+
+	Args:
+		screen_size: The size of the screen to display, given in positive x- and y-dimensions.
+		board: The Graph object to be displayed on the screen.
+		fullscreen: A boolean describing if the display should be fullscreen (True) or not (False).
+	"""
+
 	# Initialize pygame
 	pygame.init()
 
@@ -67,6 +97,18 @@ def pygame_wrapper(screen_size: Tuple[int, int], board: Graph, fullscreen: bool 
 
 
 def antgraph_window(size_x: int, size_y: int, vertex_radius: int, fullscreen: bool = False, sparcity: float = 1.0):
+	"""
+
+	Args:
+		size_x:
+		size_y:
+		vertex_radius:
+		fullscreen:
+		sparcity:
+
+	Returns:
+
+	"""
 
 	# Create the first BoardTypes and hand it to the pygame_wrapper
 	board = AntBoard(size_x, size_y, vertex_radius, sparcity)
@@ -167,10 +209,10 @@ def show_board(display: DisplayHandler, board: Graph):
 					pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 20, board.teams[team_uid].color)
 
 		# Text
-		if len(board.vertices) < 500:
-			# arguments are: string, antialias, then color
-			text_surface = display.font.render("(" + str(vertex.x) + ", " + str(vertex.y) + ")", True, ORANGE)
-			board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
+		# if len(board.vertices) < 500:
+		# 	# arguments are: string, antialias, then color
+		# 	text_surface = display.font.render("(" + str(vertex.x) + ", " + str(vertex.y) + ")", True, ORANGE)
+		# 	board_surface.blit(text_surface, dest=(vertex.x, vertex.y))  # Vertex number
 
 	# Edges
 	for edge_uid in board.edges:
