@@ -20,23 +20,16 @@ class AntBoard(Board):
 		The constructor of the AntBoard class.
 
 		Args:
-			size_x: The maximum size of the AntBoard in the x-direction, positively from 0.
-			size_y: The maximum size of the AntBoard in the y-direction, positively from 0.
-			vertex_radius: The VISUAL radius of a vertex within the Board. Twice this value is the minimum distance
-				between two Vertices
 			sparcity: A fractional value describing the chance that, after fully generating, any given Edge will be
 				deleted (assuming the Edge itself is not a bridge).
 			seed_point: A tuple describing the initial point placed on the Board.
 		"""
 
 		# Graph super constructor
-		super().__init__()
+		super().__init__(size_x, size_y, vertex_radius)
 
 		# Member variables for Graph generation
 		# TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
-		self.size_x = size_x
-		self.size_y = size_y
-		self.vertex_radius = vertex_radius
 		self.sparcity = sparcity
 		self.seed_point = seed_point
 
@@ -164,22 +157,3 @@ class AntBoard(Board):
 			if c.has_more() and len(self.teams) < len(self.vertices):
 				self.teams[team_uid] = Team(team_uid, c.request(), self)
 				self.teams[team_uid].add_vertex(select_a_starting_position())
-
-	def desmos_dump(self):
-		"""
-		This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing.
-		Somewhat deprecated now that I have a visualization tool, but sometimes helpful for sneaky-small math problems.
-
-		Returns:
-			A string representation of the Board that can be copy-and-pasted into the calculator.
-		"""
-
-		out_str = ""
-		for vertex_uid in self.vertices:
-			vertex = self.vertices[vertex_uid]
-			out_str += "(" + str(vertex.x) + ", " + str(vertex.y) + ")"
-			out_str += "(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2"
-		for edge in self.edges:
-			out_str += "((1-t)" + str(edge.v1.x) + "+t*" + str(edge.v2.x) + ",(1-t)" + str(edge.v1.y) + "+t*" + str(
-				edge.v2.y) + ")"
-		return out_str

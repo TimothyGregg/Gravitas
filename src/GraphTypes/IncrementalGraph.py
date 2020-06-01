@@ -1,4 +1,4 @@
-from Base.Graph import Graph
+from Ants.Board import Board
 from Toolbox.PoissonGenerator import PoissonGenerator
 import math
 from Toolbox.LineSegmentOverlap import do_intersect
@@ -9,16 +9,27 @@ from typing import Tuple
 # Once we get the Voronoi regions figured out, we'll use that code to exclude the exterior edges on a graph that
 # regenerates the Voronoi edges after adding each Vertex, hopefully making for an interesting, incremental graph
 # building process that you can watch.
-class IncrementalGraph(Graph):
+class IncrementalGraph(Board):
+	"""
+	A Board class that builds itself as it updates. This is a fun thing to visualize, but it does use less-then-ideal
+	connection strategies. It's not super noticeable, but the code is sub-optimal when compared to Voronoi.
+	"""
+
 	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7
 				 , seed_point: Tuple[int, int] = None):
+		"""
+		IncrementalGraph constructor
+
+		Args:
+			sparcity: A fractional value describing the chance that, after fully generating, any given Edge will be
+				deleted (assuming the Edge itself is not a bridge).
+			seed_point: A tuple describing the initial point placed on the Board.
+		"""
+
 		# Graph super constructor
-		super().__init__()
+		super().__init__(size_x, size_y, vertex_radius)
 
 		# Member variables TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
-		self.size_x = size_x
-		self.size_y = size_y
-		self.vertex_radius = vertex_radius
 		self.sparcity = sparcity
 		self.edge_lengths = []
 
@@ -36,6 +47,10 @@ class IncrementalGraph(Graph):
 	# Add the next vertex that the point generator spits out AND connect it to all vertices that fall outside it's
 	# exclusion radius but inside it's spawn radius
 	def add_next_vertex(self):
+		"""
+		This conditians the logic for adding a Vertex, including the addition of all of the sub-Voronoi Edges.
+		"""
+
 		# Add the next Vertex
 		if not self.generator:
 			raise RuntimeError("The generator ran dry. Don't let it do that. Check \"not self.generator\"")
@@ -154,18 +169,13 @@ class IncrementalGraph(Graph):
 
 	# Define an update to an incremental graph as just being the addition of a vertex
 	def update(self):
+		"""
+		This is the update method for this Board type. It simply adds a new Vertex if possible and connects that Vertex.
+
+		Returns:
+			A boolean describing if the Board was able to add a Vertex (True) or not (False)
+		"""
 		if self.generator:
 			self.add_next_vertex()
 			return True
 		return False
-
-	# This is for use at https://www.desmos.com/calculator for easy, copy-paste graphing
-	def desmos_dump(self):
-		for vertex_uid in self.vertices:
-			vertex = self.vertices[vertex_uid]
-			print("(" + str(vertex.x) + ", " + str(vertex.y) + ")")
-			print("(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2")
-			print("(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius * 4) + "^2")
-		for edge_uid in self.edges:
-			print("((1-t)" + str(self.edges[edge_uid].v1.x) + "+t*" + str(self.edges[edge_uid].v2.x) + ",(1-t)" +
-				  str(self.edges[edge_uid].v1.y) + "+t*" + str(self.edges[edge_uid].v2.y) + ")")

@@ -3,25 +3,34 @@ import random
 from typing import Tuple
 
 
-# Inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
 class PoissonGenerator:
+    """
+    Poisson point generator inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
+    """
+
     def __init__(self, size_x: int, size_y: int, vertex_radius: float, spawn_tries: int = 4
                  , seed_point: Tuple[int, int] = None):
-        # Number of tries before a spawn point is removed from the spawn_points list
-        self.spawn_tries = spawn_tries
-        # General size variables
-        self.size_x = size_x            # Size of the graph in the x-dimension
-        self.size_y = size_y            # Size of the graph in the y-dimension
-        self.vertex_radius = vertex_radius  # This is the exclusion radius of a point within this graph. This is
-        # the radius of the circle drawn around each point in which the CENTER of another point cannot reside. The
-        # exclusion circles for point will overlap, but 1/2 the exclusion radius yields circles that should NEVER
-        # overlap.
+        """
+        PoissonGenerator Constructor.
 
-        # Seed point for point generation if one is given
+        Args:
+            size_x: The maximum size of the AntBoard in the x-direction, positively from 0.
+            size_y: The maximum size of the AntBoard in the y-direction, positively from 0.
+            vertex_radius:  This is the EXCLUSION radius of a point within this graph. This is the radius of the circle
+                drawn around each point in which the CENTER of another point cannot reside. The exclusion circles for
+                point will overlap, but 1/2 the exclusion radius yields circles that should NEVER overlap.
+            spawn_tries: Number of tries before a spawn point is removed from the spawn_points list
+            seed_point: Seed point for point generation if one is given
+        """
+
+        self.size_x = size_x
+        self.size_y = size_y
+        self.vertex_radius = vertex_radius
+        self.spawn_tries = spawn_tries
         self.seed_point = seed_point
 
         # Grid size variables
-        self.cell_size = vertex_radius / math.sqrt(2)             # The cell size for the backing grid
+        self.cell_size = vertex_radius / math.sqrt(2)           # The cell size for the backing grid
         self.num_rows = math.ceil(size_x / self.cell_size)      # The number of rows in the backing grid
         self.column_size = math.ceil(size_y / self.cell_size)   # The number of elements in each column of the grid
 
@@ -39,8 +48,14 @@ class PoissonGenerator:
         self.points_vector = []     # List of (x, y) coordinate tuples
         self.spawn_points = []      # List of indices within points_vector where viable spawn points live
 
-    # Generate a point based on the Poisson Disc algorithm. Returns a boolean indicating success.
     def generate_point(self):
+        """
+        Generate a point based on the Poisson Disc algorithm.
+
+        Returns:
+            Returns a boolean indicating success (True) or failure (False).
+        """
+
         # If the points_vector list is empty, the board has not been seeded yet.
         if not self.points_vector:
             # If there is no seed point given...
@@ -150,8 +165,14 @@ class PoissonGenerator:
         self.spawn_points.remove(self.spawn_points[selected_spawn_point])
         return False
 
-    # Generate an additional point and return the (x, y) tuple
     def get_next_point(self):
+        """
+        Generate an additional point.
+
+        Returns:
+            The (x, y) tuple of the new point.
+        """
+
         # If the board has not been seeded, the first point must be generated
         if not self.seeded:
             self.generate_point()
@@ -166,12 +187,25 @@ class PoissonGenerator:
         # If the generator is finished, the last element in the array should be returned
         return self.points_vector[len(self.points_vector) - 1]
 
-    # If the spawn_points list is empty, there are no more possible spots to place a new point.
     def finished(self):
+        """
+        If the spawn_points list is empty, there are no more possible spots to place a new point.
+
+        Returns:
+            A boolean describing if the Generator is NO LONGER ABLE to generate points (True)
+        """
+
         return self.seeded and not self.spawn_points
 
-    # Generate all possible points, then return the list of (x, y) tuples
+    # , then
     def get_all_points(self):
+        """
+        Generate all possible points.
+
+        Returns:
+            A list of the (x, y) tuples of the points.
+        """
+
         while not self.seeded or not self.finished():     # "not" of an empty list yields True
             self.generate_point()
         return self.points_vector

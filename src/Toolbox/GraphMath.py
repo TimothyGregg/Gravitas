@@ -2,15 +2,25 @@ import math
 
 
 def vertex_distance(vertex1, vertex2):
+    """
+    Determine the 2D distance between two Vertices.
+
+    Args:
+        vertex1: The first Vertex in the pair.
+        vertex2: The second Vertex in teh pair.
+
+    Returns:
+        The float, 2D distance between the two passed Vertices.
+    """
     dx = vertex1.x - vertex2.x
     dy = vertex1.y - vertex2.y
     return math.sqrt(dx ** 2 + dy ** 2)
 
 
-# Print iterations progress
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', print_end="\r"):
     """
     Call in a loop to create terminal progress bar
+
     @params:
         iteration   - Required  : current iteration (Int)
         total       - Required  : total iterations (Int)

@@ -2,6 +2,7 @@ from typing import Tuple
 import random
 
 
+# Dict containing named-color information
 color_dict = {
 	(26, 22, 22): "Background",
 	(100, 100, 100): "Graph",
@@ -169,7 +170,15 @@ color_dict = {
 
 
 class ColorGenerator:
+	"""
+	A class that will supply (and subsequently name) colors in the form of RGB-value, ordered Tuples
+	"""
+
 	def __init__(self):
+		"""
+		ColorGenerator Constructor
+		"""
+
 		# Set of checked-out colors for easy checked-out-ness checking
 		self.checked_out = set()
 
@@ -191,12 +200,24 @@ class ColorGenerator:
 					if color_tuple not in self.priority_colors:
 						self.available_colors.add(color_tuple)
 
-	# Return a boolean describing if the ColorGenerator has more colors to give
 	def has_more(self):
+		"""
+		Return a boolean describing if the ColorGenerator has more colors to give.
+
+		Returns:
+			A boolean describing if the ColorGenerator has more colors to give (True) or not (False)
+		"""
+
 		return len(self.available_colors) > 0
 
-	# Record that a color has been requested and used from the ColorGenerator
 	def checkout(self, color_rgb: Tuple[int, int, int]):
+		"""
+		Record that a color has been requested and used from the ColorGenerator.
+
+		Args:
+			color_rgb: The RGB-value, ordered Tuple describing the color to check out from the available colors.
+		"""
+
 		if color_rgb in self.checked_out:
 			raise RuntimeError("Color \"" + lookup(color_rgb) + "\" already checked out")
 		self.checked_out.add(color_rgb)
@@ -205,9 +226,15 @@ class ColorGenerator:
 		elif color_rgb in self.available_colors:
 			self.available_colors.remove(color_rgb)
 
-	# Ask the ColorGenerator for a new color
-	# TODO This assumes that the generator has_more(). Maybe set up validation?
 	def request(self):
+		"""
+		Ask the ColorGenerator for a new color
+		TODO This assumes that the generator has_more(). Maybe set up validation?
+
+		Returns:
+			A RGB-value, ordered Tuple describing a color that the Generator can provide.
+		"""
+
 		# Return the priority colors first
 		if len(self.priority_colors) > 0:
 			selection = random.sample(self.priority_colors, 1)[0]
@@ -221,6 +248,15 @@ class ColorGenerator:
 
 
 def lookup(color_rgb: Tuple[int, int, int]):
+	"""
+	Given a RGB-value, ordered tuple, look up a color that a ColorGenerator Object could generate.
+	Args:
+		color_rgb: The rgb-value, ordered Tuple to lookup the color name for.
+
+	Returns:
+		A string with the name of the color if available. Otherwise, it returns "Unknown Color"
+	"""
+
 	# Iterate through the different color sets
 	for set_key in color_dict:
 		# If the color set contains a dict (i.e. it isn't just a single color)
