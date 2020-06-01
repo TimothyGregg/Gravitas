@@ -9,6 +9,7 @@ class Board(Graph):
 	def __init__(self):
 		"""
 		Constructor for Board class.
+		TODO Make this include size_x, size_y, and other Board-specific elements for help with type-hinting.
 		"""
 
 		# Super Init call
