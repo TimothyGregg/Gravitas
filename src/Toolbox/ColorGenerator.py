@@ -229,7 +229,7 @@ class ColorGenerator:
 	def request(self):
 		"""
 		Ask the ColorGenerator for a new color
-		TODO This assumes that the generator has_more(). Maybe set up validation?
+		This assumes that the generator has_more(). Maybe set up validation?
 
 		Returns:
 			A RGB-value, ordered Tuple describing a color that the Generator can provide.

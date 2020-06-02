@@ -6,6 +6,7 @@ from Toolbox.ColorGenerator import ColorGenerator
 import random
 import statistics
 from typing import Dict
+from typing import Set
 
 
 class AntBoard(Board):
@@ -29,7 +30,6 @@ class AntBoard(Board):
 		super().__init__(size_x, size_y, vertex_radius)
 
 		# Member variables for Graph generation
-		# TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
 		self.sparcity = sparcity
 		self.seed_point = seed_point
 
@@ -49,8 +49,6 @@ class AntBoard(Board):
 		"""
 
 		all_points = []
-		# TODO Shrinking them here messes up the rendering on really small boards. This seems like such a minor issue
-		#  that I'm going to ignore it until later.
 		default_radius = self.vertex_radius
 		tries = 20
 		while len(all_points) < 4:  # 4 is the minimum for Delaunay Triangulation
@@ -118,42 +116,36 @@ class AntBoard(Board):
 			num_teams: The number of Teams to attempt to add to the Board.
 		"""
 
-		def select_a_starting_position():
+		def select_a_starting_position(all_vertices: Set[int], used_vertices: Set[int]):
 			"""
 			Method to pick a starting location for a Team within the graph.
 			TODO determine spacing between teams so that they do not start too close together.
+
+			Args:
+				all_vertices: The set of all vertices in the Graph.
+				used_vertices: The set of all vertices that have already been chosen as a starting point in the Graph.
 
 			Returns:
 				The Vertex that has been picked as a valid starting position.
 			"""
 
-			# Try to pick a vertex until all are determined to be bad
-			tries = []
-			while len(tries) < len(self.vertices):
-				# Pick a random vertex to check if it has been used already
-				picked_uid = random.choice(list(self.vertices.keys()))
-				good = True
-				# Check if the picked vertex uid is in any of the teams vertices dicts
-				for team_uid_it in self.teams:
-					if picked_uid in self.teams[team_uid_it].controlled_vertices:
-						# If the vertex is already controlled by a team, flag it as no good and add it to the
-						# already-tried uid list
-						good = False
-						tries.append(picked_uid)
-						break
-				# If the vertex uid wasn't in use, return the vertex itself
-				if good:
-					return self.vertices[picked_uid]
-			# If a good vertex cannot be found, return None
+			available_vertices = all_vertices.difference(used_vertices)
+			if len(available_vertices) > 0:
+				vertex_uid_choice = random.choice(list(available_vertices))
+				return self.vertices[vertex_uid_choice]
 			return None
 
 		c = ColorGenerator()
+		used_vertices = set()
+		all_vertices = set(self.vertices.keys())
 		# Generate the teams
 		for team_uid in range(num_teams):
 			# If the color generator has a unique color available for the new team to be generated, continue. If not,
 			# we're done making teams.
 			# Also, if we've added as many teams as we have vertices, we cannot possibly add any more, and we're done
 			# making teams
-			if c.has_more() and len(self.teams) < len(self.vertices):
+			if c.has_more() and len(used_vertices) < len(self.vertices):
 				self.teams[team_uid] = Team(team_uid, c.request(), self)
-				self.teams[team_uid].add_vertex(select_a_starting_position())
+				vertex_choice = select_a_starting_position(all_vertices, used_vertices)
+				self.teams[team_uid].add_vertex(vertex_choice)
+				used_vertices.add(vertex_choice.uid)
