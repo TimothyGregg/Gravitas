@@ -2,6 +2,7 @@ from typing import Tuple
 import random
 
 
+# TODO Type-hint
 # Dict containing named-color information
 color_dict = {
 	(26, 22, 22): "Background",

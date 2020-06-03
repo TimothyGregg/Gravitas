@@ -1,4 +1,4 @@
-from Base import Vertex
+from Core import Vertex
 from Toolbox.GraphMath import vertex_distance
 
 
@@ -18,10 +18,10 @@ class Edge:
         """
 
         # Create member variables
-        self.v1 = vertex1
-        self.v2 = vertex2
-        self.uid = uid
-        self.length = vertex_distance(vertex1, vertex2)
+        self.v1: Vertex = vertex1
+        self.v2: Vertex = vertex2
+        self.uid: int = uid
+        self.length: float = vertex_distance(vertex1, vertex2)
 
     def __str__(self):
         """

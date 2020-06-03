@@ -3,6 +3,7 @@ import random
 from typing import Tuple
 
 
+# TODO Type-hint
 class PoissonGenerator:
     """
     Poisson point generator inspired by and partially adapted from: https://www.youtube.com/watch?v=7WcmyxyFO7o
@@ -197,7 +198,6 @@ class PoissonGenerator:
 
         return self.seeded and not self.spawn_points
 
-    # , then
     def get_all_points(self):
         """
         Generate all possible points.

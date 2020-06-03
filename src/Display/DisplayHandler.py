@@ -248,7 +248,7 @@ def show_board(display: DisplayHandler, board: Board):
 		# pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, board.vertex_radius, BASE01)  # True radius
 		pygame.gfxdraw.circle(board_surface, vertex.x, vertex.y, 5, (100, 100, 100))  # Center circle
 
-		# Fun color-changing nodes based on connections (best in Incremental Graph)
+		# Fun color-changing bases based on connections (best in Incremental Graph)
 		num_connected = len(board.adjacency_list[vertex_uid])
 		# 8 is the max because if there are 8 connections, the Vertex is connected to all the vertices in its
 		# adjacent cells in the backing grid for the generator. I think.

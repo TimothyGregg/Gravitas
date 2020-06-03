@@ -2,6 +2,7 @@
 from typing import Tuple
 
 
+# TODO Type-hint
 class _Point:
 	def __init__(self, x, y):
 		self.x = x

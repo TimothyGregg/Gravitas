@@ -14,10 +14,10 @@ class Vertex:
         """
 
         # Set member variables
-        self.x = x
-        self.y = y
+        self.x: int = x
+        self.y: int = y
         # Set unique ID
-        self.uid = uid
+        self.uid: int = uid
 
     def __str__(self):
         """

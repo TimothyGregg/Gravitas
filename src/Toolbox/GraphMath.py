@@ -1,6 +1,7 @@
 import math
 
 
+# TODO Type-hint
 def vertex_distance(vertex1, vertex2):
     """
     Determine the 2D distance between two Vertices.

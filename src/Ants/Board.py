@@ -1,9 +1,10 @@
-from Base.Graph import Graph
+from Core.Graph import Graph
+from Core.Vertex import Vertex
 
 
 class Board(Graph):
 	"""
-	A Board for Ant games. This is a child class of Base.Graph.
+	A Board for Ant games. This is a child class of Core.Graph.
 	"""
 
 	def __init__(self,  size_x: int, size_y: int, vertex_radius: float):
@@ -21,9 +22,9 @@ class Board(Graph):
 		super().__init__()
 
 		# Member variables
-		self.size_x = size_x
-		self.size_y = size_y
-		self.vertex_radius = vertex_radius
+		self.size_x: int = size_x
+		self.size_y: int = size_y
+		self.vertex_radius: float = vertex_radius
 
 	def update(self):
 		"""
@@ -44,9 +45,9 @@ class Board(Graph):
 			A string representation of the Board that can be copy-and-pasted into the calculator.
 		"""
 
-		out_str = ""
+		out_str: str = ""
 		for vertex_uid in self.vertices:
-			vertex = self.vertices[vertex_uid]
+			vertex: Vertex = self.vertices[vertex_uid]
 			out_str += "(" + str(vertex.x) + ", " + str(vertex.y) + ")"
 			out_str += "(x-" + str(vertex.x) + ")^2 + (y-" + str(vertex.y) + ")^2 = " + str(self.vertex_radius) + "^2"
 		for edge in self.edges:

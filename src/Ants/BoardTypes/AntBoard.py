@@ -1,12 +1,14 @@
-from Base.Graph import *
+from Core.Graph import *
 from Ants.Team import *
 from Ants.Board import *
+from Ants.Base import Base
 from Toolbox.PoissonGenerator import PoissonGenerator
 from Toolbox.ColorGenerator import ColorGenerator
 import random
 import statistics
 from typing import Dict
 from typing import Set
+from typing import List
 
 
 class AntBoard(Board):
@@ -30,8 +32,8 @@ class AntBoard(Board):
 		super().__init__(size_x, size_y, vertex_radius)
 
 		# Member variables for Graph generation
-		self.sparcity = sparcity
-		self.seed_point = seed_point
+		self.sparcity: float = sparcity
+		self.seed_point: Tuple[int, int] = seed_point
 
 		# Member variables for gameplay
 		# A dict containing the teams, keyed by team UID
@@ -41,16 +43,22 @@ class AntBoard(Board):
 		# Generate the actual Graph elements
 		self.add_vertices()
 		self.add_edges()
-		self.add_teams(7)
+
+		# A dict of Bases, keyed by corresponding vertex UID
+		self.bases: Dict[int, Base] = {}
+
+		# Generate the ant game elements
+		self.add_bases()
+		self.add_teams(1)
 
 	def add_vertices(self):
 		"""
 		Grab all the points for the graph from a Poisson-Disc point generator
 		"""
 
-		all_points = []
-		default_radius = self.vertex_radius
-		tries = 20
+		all_points: List[Tuple[int, int]] = []
+		default_radius: float = self.vertex_radius
+		tries: int = 20
 		while len(all_points) < 4:  # 4 is the minimum for Delaunay Triangulation
 			if self.seed_point is None:
 				all_points = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2).get_all_points()
@@ -72,31 +80,31 @@ class AntBoard(Board):
 		"""
 
 		# Generate the Delauney edges using the Voronoi method and connect them
-		edge_dict = self.get_voronoi_diagram_ridge_lines()
-		edge_lengths = []
+		edge_dict = self.get_voronoi_diagram_ridge_lines()  # TODO Type hint
+		edge_lengths: List[float] = []
 		for vertex1_uid in edge_dict:
 			for vertex2_uid in edge_dict[vertex1_uid]:
-				new_edge_uid = self.connect_vertices(self.vertices[vertex1_uid], self.vertices[vertex2_uid])
+				new_edge_uid: int = self.connect_vertices(self.vertices[vertex1_uid], self.vertices[vertex2_uid])
 				edge_lengths.append(self.edges[new_edge_uid].length)
 
 		# Cull edges that are too long (typically along the edges, with crazy-big circles
 		# TODO this may be able to be rolled in to part of the computation of the Voronoi regions (i.e. the regions
 		#  that extent to infinity are probably those with long edges spanning the exterior of the graph)
-		average = sum(edge_lengths) / len(edge_lengths)
-		st_dev = statistics.stdev(edge_lengths)
-		all_edge_keys = list(self.edges.keys())
+		average: float = sum(edge_lengths) / len(edge_lengths)
+		st_dev: float = statistics.stdev(edge_lengths)
+		all_edge_keys: List[int] = list(self.edges.keys())
 		for edge_uid in all_edge_keys:
 
 			if self.edges[edge_uid].length > average + st_dev:
 				self.disconnect_edge(edge_uid)
 
 		# remove random edges to generate edge sparcity
-		all_edge_keys = list(self.edges.keys())
-		to_remove = []
+		all_edge_keys: List[int] = list(self.edges.keys())
+		to_remove: List[int] = []
 		for edge_uid in all_edge_keys:
 			# Ignore the potential to remove an edge if the edge is the only edge connecting that vertex
-			n1_uid = self.edges[edge_uid].v1.uid
-			n2_uid = self.edges[edge_uid].v2.uid
+			n1_uid: int = self.edges[edge_uid].v1.uid
+			n2_uid: int = self.edges[edge_uid].v2.uid
 			if len(self.adjacency_list[n1_uid]) < 2:
 				continue
 			if len(self.adjacency_list[n2_uid]) < 2:
@@ -108,6 +116,15 @@ class AntBoard(Board):
 		for edge_uid in to_remove:
 			if not self.is_bridge(edge_uid):
 				self.disconnect_edge(edge_uid)
+
+	def add_bases(self):
+		"""
+		Add a Core object on top of each Vertex. These Bases are the real meat of the game board.
+		"""
+
+		# Add a standard Core on top of each Vertex
+		for vertex_uid in self.vertices:
+			self.bases[vertex_uid] = Base(vertex_uid)
 
 	def add_teams(self, num_teams: int):
 		"""
@@ -135,9 +152,9 @@ class AntBoard(Board):
 				return self.vertices[vertex_uid_choice]
 			return None
 
-		c = ColorGenerator()
-		used_vertices = set()
-		all_vertices = set(self.vertices.keys())
+		c: ColorGenerator = ColorGenerator()
+		used_vertices: Set[int] = set()
+		all_vertices: Set[int] = set(self.vertices.keys())
 		# Generate the teams
 		for team_uid in range(num_teams):
 			# If the color generator has a unique color available for the new team to be generated, continue. If not,
@@ -146,6 +163,6 @@ class AntBoard(Board):
 			# making teams
 			if c.has_more() and len(used_vertices) < len(self.vertices):
 				self.teams[team_uid] = Team(team_uid, c.request(), self)
-				vertex_choice = select_a_starting_position(all_vertices, used_vertices)
+				vertex_choice: Vertex = select_a_starting_position(all_vertices, used_vertices)
 				self.teams[team_uid].add_vertex(vertex_choice)
 				used_vertices.add(vertex_choice.uid)

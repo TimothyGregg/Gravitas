@@ -1,6 +1,8 @@
-from Base.Vertex import Vertex
-from Ants.Node import Node
+from Core.Vertex import Vertex
+from Ants.Base import Base
 from typing import Tuple
+from typing import Dict
+from typing import List
 from Ants.BoardTypes import AntBoard
 
 
@@ -21,25 +23,22 @@ class Team:
         """
 
         # Team UID
-        self.uid = uid
+        self.uid: int = uid
 
         # Team color, represented as a tuple of 0-255 RGB values
-        self.color = color
+        self.color: Tuple[int, int, int] = color
 
         # The game Graph
-        self.board = board
+        self.board: AntBoard = board
 
         # A dict of the vertices controlled by the Team
-        # vertex.uid : Vertex
-        self.controlled_vertices = {}
+        self.controlled_vertices: Dict[int, Vertex] = {}
 
-        # A dict of the vertices adjacent to those controlled by the team
-        # vertex.uid : adjacency list for that vertex
-        self.adjacent_vertices = {}
+        # A dict of the vertex UIDs adjacent to those controlled by the team
+        self.adjacent_vertices: Dict[int, List[int]] = {}
 
-        # A dict of the Nodes that the Team operates on top of each controlled Vertex
-        # vertex.uid: Base
-        self.nodes = {}
+        # A dict of the Bases that the Team operates on top of each controlled Vertex
+        self.bases: Dict[int, Base] = {}
 
     def add_vertex(self, vertex: Vertex):
         """
@@ -59,13 +58,13 @@ class Team:
         # Add the adjacency list of the new vertex to the dict of adjacent vertices
         self.adjacent_vertices[vertex.uid] = self.board.adjacency_list[vertex.uid]
 
-        # Add a new Node at the vertex
-        self.nodes[vertex.uid] = Node()
+        # Add a new Core at the vertex
+        self.bases[vertex.uid] = Base()
 
     def remove_vertex(self, vertex):
         """
         Remove a Vertex fom the dict of the controlled vertices of this Team
-        This also removes the Node from self.nodes indiscriminately. Use with caution, as the Node will be removed
+        This also removes the Core from self.bases indiscriminately. Use with caution, as the Core will be removed
         completely and left to garbage collection (boy howdy, unless I goof on references somewhere).
 
         Args:
@@ -85,11 +84,11 @@ class Team:
             except KeyError:
                 print("remove_vertex Error: Vertex " + str(vertex.uid) + " not found in adjacency lists of Team " +
                       str(self.uid))
-            # remove the Node from nodes
+            # remove the Core from bases
             try:
-                del self.nodes[vertex.uid]
+                del self.bases[vertex.uid]
             except KeyError:
-                print("No Node found in Team " + str(self.uid) + " for vertex " + str(vertex.uid))
+                print("No Core found in Team " + str(self.uid) + " for vertex " + str(vertex.uid))
 
         # When given the vertex to remove by it's uid
         elif type(vertex) == int:
@@ -103,11 +102,19 @@ class Team:
             except KeyError:
                 print("remove_vertex Error: Vertex " + str(vertex) + " not found in adjacency lists of Team " +
                       str(self.uid))
-            # Remove the Node from nodes
+            # Remove the Core from bases
             try:
-                del self.nodes[vertex]
+                del self.bases[vertex]
             except KeyError:
-                print("No Node found in Team " + str(self.uid) + " for vertex " + str(vertex))
+                print("No Core found in Team " + str(self.uid) + " for vertex " + str(vertex))
         else:
             raise RuntimeError("Vertex to remove not given as a Vertex object or as a Vertex uid [int]")
 
+    def update(self):
+        """
+        Updates the Team by updating all elements thereof.
+        """
+
+        # Update each Core in the Team
+        for vertex_id in self.bases:
+            self.bases[vertex_id].update()

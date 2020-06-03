@@ -1,6 +1,9 @@
-from Base.Edge import *
-from Base.Vertex import *
+from Core.Edge import *
+from Core.Vertex import *
 from typing import Tuple
+from typing import Dict
+from typing import List
+from typing import Set
 import numpy
 from scipy.spatial import Voronoi
 import math
@@ -19,23 +22,21 @@ class Graph:
         """
 
         # Graph Properties
-        self._vertex_uid = 0
-        self._edge_uid = 0
+        self._vertex_uid: int = 0
+        self._edge_uid: int = 0
 
         # A dict of the Vertices of the graph, keyed by their UIDs
-        # vertex.uid : Vertex
-        self.vertices = {}
+        self.vertices: Dict[int, Vertex] = {}
 
         # A dict of the Edges of the graph, keyed by their UIDs
-        # edge.uid : Edge
-        self.edges = {}
+        self.edges: Dict[int, Edge] = {}
 
         # A dict of lists of the adjacent vertex UIDs of each Vertex, keyed by the vertex UID
         # vertex.uid : [adjacent vertex UIDs]
-        self.adjacency_list = {}  # A classic graph adjacency list for easy connectivity checks
+        self.adjacency_list: Dict[int, List[int]] = {}  # A classic graph adjacency list for easy connectivity checks
 
         # Things to help out the Voronoi Generation
-        self.center = Vertex(0, 0, -1)  # The average of all vertices x and y values, UID of -1
+        self.center: Vertex = Vertex(0, 0, -1)  # The average of all vertices x and y values, UID of -1
 
         # TODO We'll come back to this later perhaps. This would make looking for edge overlaps much easier and
         #  faster, but would require a dynamic resizing of the backing grid AND determining how granular we want to
@@ -57,7 +58,7 @@ class Graph:
             A sting representation of the Graph object.
         """
 
-        out_str = ""
+        out_str: str = ""
         for vertex_uid in self.vertices:
             out_str += str(self.vertices[vertex_uid]) + "\n"
         for edge_uid in self.edges:
@@ -139,9 +140,9 @@ class Graph:
             A boolean indicating that the execution succeeded.
         """
 
-        edge = self.edges[edge_uid]
-        vertex1 = edge.v1
-        vertex2 = edge.v2
+        edge: Edge = self.edges[edge_uid]
+        vertex1: Vertex = edge.v1
+        vertex2: Vertex = edge.v2
         self.adjacency_list[vertex1.uid].remove(vertex2.uid)
         self.adjacency_list[vertex2.uid].remove(vertex1.uid)
         if edge_uid in self.edges:
@@ -158,7 +159,7 @@ class Graph:
             A vertex position dict with the format {vertex_uid: vertex (x, y) position tuple}
         """
 
-        vertex_position_dict= {}
+        vertex_position_dict: Dict[int, Tuple[int, int]] = {}
         for vertex_uid in self.vertices:
             vertex_position_dict[vertex_uid] = (self.vertices[vertex_uid].x, self.vertices[vertex_uid].y)
         return vertex_position_dict
@@ -175,10 +176,10 @@ class Graph:
             same box.
         """
 
-        x_min = 0
-        x_max = 0
-        y_min = 0
-        y_max = 0
+        x_min: int = 0
+        x_max: int = 0
+        y_min: int = 0
+        y_max: int = 0
         for vertex_uid in self.vertices:
             # Adjust x-values
             if self.vertices[vertex_uid].x > x_max:
@@ -204,8 +205,8 @@ class Graph:
         """
 
         # Make the visited list and do a DFS
-        visited = {}
-        stack = [self.vertices[0].uid]
+        visited: Dict[int, bool] = {}
+        stack: List[int] = [self.vertices[0].uid]
         for vertex_uid in self.vertices:
             visited[vertex_uid] = False
         # vertices to (but not including) 0 (step by -1
@@ -234,15 +235,15 @@ class Graph:
         """
 
         # Remove the Edge
-        n1 = self.edges[edge_uid].v1
-        n2 = self.edges[edge_uid].v2
+        v1: Vertex = self.edges[edge_uid].v1
+        v2: Vertex = self.edges[edge_uid].v2
         self.disconnect_edge(edge_uid)
 
         # Check if the graph is still connected
-        connected = self.is_connected()
+        connected: bool = self.is_connected()
 
         # Put the Edge back
-        self.connect_vertices(n1, n2, edge_uid)
+        self.connect_vertices(v1, v2, edge_uid)
 
         # Indicate if that Edge removal led to an unconnected board
         return not connected
@@ -258,14 +259,14 @@ class Graph:
         """
 
         # Someone else does all the fancy math for me
-        vertex_position_dict = self.get_vertex_position_dict()
+        vertex_position_dict: Dict[int, Tuple[int, int]] = self.get_vertex_position_dict()
         # Create this list for reference down in the translation from voronoi ridge_points to UIDs to ensure that
         # even if the UIDs aren't in order in the dict, we keep them consistent
-        vertex_uid_list = [vertex_uid for vertex_uid in vertex_position_dict]
+        vertex_uid_list: List[int] = [vertex_uid for vertex_uid in vertex_position_dict]
         voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))
 
         # Storage variable
-        vertex_connections = {}
+        vertex_connections: Dict[int, List[int]] = {}
         for vertex_uid in self.vertices:
             vertex_connections[self.vertices[vertex_uid].uid] = []  # Seems redundant, but I just want to be safe here
 
@@ -288,15 +289,16 @@ class Graph:
         """
 
         # Once again, someone else does all the fancy math for me
-        vertex_position_dict = self.get_vertex_position_dict()
+        vertex_position_dict: Dict[int, Tuple[int, int]] = self.get_vertex_position_dict()
         voronoi = Voronoi(numpy.array([vertex_position_dict[vertex_uid] for vertex_uid in vertex_position_dict]))
 
         # Create this list for reference in the translation from voronoi ridge_points to UIDs to ensure that
         # even if the UIDs aren't in order in the dict, we keep them consistent
-        vertex_uid_list = [vertex_uid for vertex_uid in vertex_position_dict]
+        vertex_uid_list: List[int] = [vertex_uid for vertex_uid in vertex_position_dict]
         # Storage for the relevant [vertices of a *region*] of a given Vertex in the Graph
-        vertex_voronoi_regions = {vertex_uid: set([]) for vertex_uid in vertex_uid_list}  # This contains sets of
-        # vertices in the Voronoi Graph (sets will not add an element again if it already exists)
+        vertex_voronoi_regions: Dict[int, Set[int]] = {vertex_uid: set([]) for vertex_uid in vertex_uid_list}  # This
+        # contains sets of vertices in the Voronoi Graph (sets will not add an element again if it already exists)
+        # TODO I THINK this is a Set of ints? I'm not sure and I'm ignoring this for now
 
         # Create a Voronoi Graph here:
         voronoi_graph = Graph()

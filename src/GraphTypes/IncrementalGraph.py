@@ -6,6 +6,7 @@ from typing import Tuple
 # import time
 
 
+# TODO Type-hint
 # Once we get the Voronoi regions figured out, we'll use that code to exclude the exterior edges on a graph that
 # regenerates the Voronoi edges after adding each Vertex, hopefully making for an interesting, incremental graph
 # building process that you can watch.
