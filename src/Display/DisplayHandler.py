@@ -257,7 +257,7 @@ def show_board(display: DisplayHandler, board: Board):
 		# Display the colors of the vertices if they are owned by a team
 		if type(board) == AntBoard:
 			for team_uid in board.teams:
-				if vertex_uid in board.teams[team_uid].controlled_vertices:
+				if vertex_uid in board.teams[team_uid].controlled_bases:
 					pygame.gfxdraw.filled_circle(board_surface, vertex.x, vertex.y, 20, board.teams[team_uid].color)
 
 		# Text

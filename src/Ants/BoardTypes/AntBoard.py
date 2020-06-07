@@ -133,36 +133,36 @@ class AntBoard(Board):
 			num_teams: The number of Teams to attempt to add to the Board.
 		"""
 
-		def select_a_starting_position(all_vertices: Set[int], used_vertices: Set[int]):
+		def select_a_starting_position(all_bases: Set[int], used_bases: Set[int]):
 			"""
 			Method to pick a starting location for a Team within the graph.
 			TODO determine spacing between teams so that they do not start too close together.
 
 			Args:
-				all_vertices: The set of all vertices in the Graph.
-				used_vertices: The set of all vertices that have already been chosen as a starting point in the Graph.
+				all_bases: The set of all Bases in the Graph.
+				used_bases: The set of all Bases that have already been chosen as a starting point in the Graph.
 
 			Returns:
 				The Vertex that has been picked as a valid starting position.
 			"""
 
-			available_vertices = all_vertices.difference(used_vertices)
-			if len(available_vertices) > 0:
-				vertex_uid_choice = random.choice(list(available_vertices))
-				return self.vertices[vertex_uid_choice]
+			available_bases = all_bases.difference(used_bases)
+			if len(available_bases) > 0:
+				base_uid_choice = random.choice(list(available_bases))
+				return self.bases[base_uid_choice]
 			return None
 
 		c: ColorGenerator = ColorGenerator()
-		used_vertices: Set[int] = set()
-		all_vertices: Set[int] = set(self.vertices.keys())
+		used_bases: Set[int] = set()
+		all_bases: Set[int] = set(self.bases.keys())
 		# Generate the teams
 		for team_uid in range(num_teams):
 			# If the color generator has a unique color available for the new team to be generated, continue. If not,
 			# we're done making teams.
 			# Also, if we've added as many teams as we have vertices, we cannot possibly add any more, and we're done
 			# making teams
-			if c.has_more() and len(used_vertices) < len(self.vertices):
+			if c.has_more() and len(used_bases) < len(self.bases):
 				self.teams[team_uid] = Team(team_uid, c.request(), self)
-				vertex_choice: Vertex = select_a_starting_position(all_vertices, used_vertices)
-				self.teams[team_uid].add_vertex(vertex_choice)
-				used_vertices.add(vertex_choice.uid)
+				base_choice: Base = select_a_starting_position(all_bases, used_bases)
+				self.teams[team_uid].add_base(base_choice)
+				used_bases.add(base_choice.uid)

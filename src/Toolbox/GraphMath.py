@@ -1,8 +1,9 @@
 import math
+from Core.Vertex import Vertex
 
 
 # TODO Type-hint
-def vertex_distance(vertex1, vertex2):
+def vertex_distance(vertex1: Vertex, vertex2: Vertex):
     """
     Determine the 2D distance between two Vertices.
 
@@ -13,8 +14,8 @@ def vertex_distance(vertex1, vertex2):
     Returns:
         The float, 2D distance between the two passed Vertices.
     """
-    dx = vertex1.x - vertex2.x
-    dy = vertex1.y - vertex2.y
+    dx: int = vertex1.x - vertex2.x
+    dy: int = vertex1.y - vertex2.y
     return math.sqrt(dx ** 2 + dy ** 2)
 
 

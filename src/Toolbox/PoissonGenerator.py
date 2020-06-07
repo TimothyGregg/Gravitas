@@ -1,6 +1,7 @@
 import math
 import random
 from typing import Tuple
+from typing import List
 
 
 # TODO Type-hint
@@ -24,30 +25,33 @@ class PoissonGenerator:
             seed_point: Seed point for point generation if one is given
         """
 
-        self.size_x = size_x
-        self.size_y = size_y
-        self.vertex_radius = vertex_radius
-        self.spawn_tries = spawn_tries
-        self.seed_point = seed_point
+        self.size_x: int = size_x
+        self.size_y: int = size_y
+        self.vertex_radius: float = vertex_radius
+        self.spawn_tries: int = spawn_tries
+        self.seed_point: Tuple[int, int] = seed_point
 
         # Grid size variables
-        self.cell_size = vertex_radius / math.sqrt(2)           # The cell size for the backing grid
-        self.num_rows = math.ceil(size_x / self.cell_size)      # The number of rows in the backing grid
-        self.column_size = math.ceil(size_y / self.cell_size)   # The number of elements in each column of the grid
+        self.cell_size: float = vertex_radius / math.sqrt(2)           # The cell size for the backing grid
+        self.num_rows: int = math.ceil(size_x / self.cell_size)      # The number of rows in the backing grid
+        self.column_size: int = math.ceil(size_y / self.cell_size)   # The number of elements in each column of the grid
 
         # The grid for smart distance checking
-        self.grid = [[0 for _ in range(self.column_size)] for _ in range(self.num_rows)]    # Use "_" for unused var
+        self.grid: List[List[int]] = [[0 for _ in range(self.column_size)] for _ in range(self.num_rows)]    # Use "_"
+        # for
+        # unused
+        # var
         # The grid contains all 0's by default, which indicates nothing is there. To indicate a vertex exists on the
         # grid, we add the index of the vertex within points_vector PLUS 1. Keep this in mind when indexing based on
         # values found in the grid.
         # This generates all 0's, and "[[0] * 10] * 10" will yield a list of ten references to the same list of 10 zeros
 
         # Flags
-        self.seeded = False     # Check to see if the board has been seeded.
+        self.seeded: bool = False     # Check to see if the board has been seeded.
 
         # Lists for tracking generated points and available spawn points
-        self.points_vector = []     # List of (x, y) coordinate tuples
-        self.spawn_points = []      # List of indices within points_vector where viable spawn points live
+        self.points_vector: List[Tuple[int, int]] = []     # List of (x, y) coordinate tuples
+        self.spawn_points: List[int] = []      # List of indices within points_vector where viable spawn points live
 
     def generate_point(self):
         """
@@ -62,12 +66,12 @@ class PoissonGenerator:
             # If there is no seed point given...
             if self.seed_point is None:
                 # Add (x, y) tuple within the middle third to points_vector
-                start_x = random.randint(int(self.size_x / 3), int(2 * self.size_x / 3))
-                start_y = random.randint(int(self.size_y / 3), int(2 * self.size_y / 3))
+                start_x: int = random.randint(int(self.size_x / 3), int(2 * self.size_x / 3))
+                start_y: int = random.randint(int(self.size_y / 3), int(2 * self.size_y / 3))
             # If there IS a seed point given
             else:
-                start_x = self.seed_point[0]
-                start_y = self.seed_point[1]
+                start_x: int = self.seed_point[0]
+                start_y: int = self.seed_point[1]
             self.points_vector.append((start_x, start_y))
             # Index 0 of points_vector is a viable spawn point
             self.spawn_points.append(0)
@@ -90,16 +94,17 @@ class PoissonGenerator:
         # point from spawn_points
         for it in range(self.spawn_tries):
             # Generate new point first in polar coordinates, then convert to rectangular
-            radius = self.vertex_radius * (1 + math.sqrt(random.random()))    # Distance in polar coordinates. This is
+            radius: float = self.vertex_radius * (1 + math.sqrt(random.random()))    # Distance in polar coordinates.
+            # This is
             # specifically written to generate numbers that are evenly distributed through the area of the circle
             # drawn, not along the radius, as that would lead to a larger density at the center of the field. Read
             # more here: http://www.anderswallin.net/2009/05/uniform-random-points-in-a-circle-using-polar-coordinates/
             # The rounding is based on theta. Because the vertices are positioned at integer coordinates,
             # the floating-point distances between them can be messed up if you round them the same way every time.
             # This way, they always round to be INSIDE the bounding circle.
-            theta = 2 * math.pi * random.random()  # Angle in polar coordinates
-            x_addition = radius * math.cos(theta)  # The distance added in the x-direction
-            y_addition = radius * math.sin(theta)  # The distance added in the y-direction
+            theta: float = 2 * math.pi * random.random()  # Angle in polar coordinates
+            x_addition: float = radius * math.cos(theta)  # The distance added in the x-direction
+            y_addition: float = radius * math.sin(theta)  # The distance added in the y-direction
             if 0 <= theta < math.pi / 2:  # First quadrant rounding
                 x_guess = self.points_vector[self.spawn_points[selected_spawn_point]][0] + math.floor(x_addition)
                 y_guess = self.points_vector[self.spawn_points[selected_spawn_point]][1] + math.floor(y_addition)

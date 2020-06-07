@@ -3,6 +3,8 @@ from Toolbox.PoissonGenerator import PoissonGenerator
 import math
 from Toolbox.LineSegmentOverlap import do_intersect
 from typing import Tuple
+from typing import Dict
+from typing import List
 # import time
 
 
@@ -16,8 +18,8 @@ class IncrementalGraph(Board):
 	connection strategies. It's not super noticeable, but the code is sub-optimal when compared to Voronoi.
 	"""
 
-	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7
-				 , seed_point: Tuple[int, int] = None):
+	def __init__(self, size_x: int, size_y: int, vertex_radius: float, sparcity: float = 0.7,
+					 seed_point: Tuple[int, int] = None):
 		"""
 		IncrementalGraph constructor
 
@@ -31,15 +33,15 @@ class IncrementalGraph(Board):
 		super().__init__(size_x, size_y, vertex_radius)
 
 		# Member variables TODO Set up validation for these inputs (i.e. no boards with 0 vertex radius)
-		self.sparcity = sparcity
-		self.edge_lengths = []
+		self.sparcity: float = sparcity
 
 		# The generator to pull each new point from
 		if seed_point is None:
 			self.generator = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2)
 		else:
 			self.generator = PoissonGenerator(self.size_x, self.size_y, self.vertex_radius * 2, seed_point=seed_point)
-		self.vertex_positions = {}  # To store vertex positions for easy lookup in add_next_vertex
+		self.vertex_positions: Dict[Tuple[int, int], int] = {}  # To store vertex positions for easy lookup in
+	# add_next_vertex
 
 	# TODO This sometimes generates unconnected vertices AND sometimes generates edges that overlap, like when you
 	#  have 4 vertices that arrange in a square, it connects across both diagonals. This might require logic
@@ -49,23 +51,25 @@ class IncrementalGraph(Board):
 	# exclusion radius but inside it's spawn radius
 	def add_next_vertex(self):
 		"""
-		This conditians the logic for adding a Vertex, including the addition of all of the sub-Voronoi Edges.
+		This contains the logic for adding a Vertex, including the addition of all of the sub-Voronoi Edges.
 		"""
 
 		# Add the next Vertex
 		if not self.generator:
 			raise RuntimeError("The generator ran dry. Don't let it do that. Check \"not self.generator\"")
-		new_point_position = self.generator.get_next_point()
-		new_vertex_uid = self.add_vertex(new_point_position)
+		new_point_position: Tuple[int, int] = self.generator.get_next_point()
+		new_vertex_uid: int = self.add_vertex(new_point_position)
 		self.vertex_positions[new_point_position] = new_vertex_uid  # Store the uid as a function of its position,
 		# for fast lookup
 
 		# Stolen code from the Poisson Generator. Yeah, we're hacking our own class here but it'll work and doesn't
 		# add any real time or memory to the program.
-		grid_x_pos = int(new_point_position[0] / self.generator.cell_size)  # Grid x-location of the generated point
-		grid_y_pos = int(new_point_position[1] / self.generator.cell_size)  # Grid x-location of the generated point
+		grid_x_pos: int = int(new_point_position[0] / self.generator.cell_size)  # Grid x-location of the generated
+		# point
+		grid_y_pos: int = int(new_point_position[1] / self.generator.cell_size)  # Grid x-location of the generated
+		# point
 
-		grid_scan_size = 7  # Should be odd, but modifying this will adjust how far a node looks to connect
+		grid_scan_size: int = 7  # Should be odd, but modifying this will adjust how far a node looks to connect
 		# Loop through the local x-range of the grid in self.generator
 		for x_it in range(grid_x_pos - int(grid_scan_size / 2), grid_x_pos + (int(grid_scan_size / 2) + 1)):
 			# Check if outside the x-bounds of the grid
@@ -88,10 +92,11 @@ class IncrementalGraph(Board):
 				if self.generator.grid[x_it][y_it] and self.generator.grid[x_it][y_it] < \
 					len(self.generator.points_vector):  # returns True if the value is > 0, i.e. there is a point
 
-					other_point_position = self.generator.points_vector[self.generator.grid[x_it][y_it] - 1]
-					dx = new_point_position[0] - other_point_position[0]
-					dy = new_point_position[1] - other_point_position[1]
-					distance = math.sqrt(dx ** 2 + dy ** 2)
+					other_point_position: Tuple[int, int] = self.generator.points_vector[
+						self.generator.grid[x_it][y_it] - 1]
+					dx: int = new_point_position[0] - other_point_position[0]
+					dy: int = new_point_position[1] - other_point_position[1]
+					distance: float = math.sqrt(dx ** 2 + dy ** 2)
 
 					# If the point that we found is inside the spawn radius of the point (note: it should ALWAYS be
 					# outside the exclusion radius (self.vertex_radius * 2) by virtue of how the points are generated in
@@ -111,7 +116,7 @@ class IncrementalGraph(Board):
 		# self.desmos_dump()
 		# print("-------------------------")
 
-		to_remove = []
+		to_remove: List[int] = []
 		# For each vertex connected to the one just added...
 		for other_vertex_uid in self.adjacency_list[new_vertex_uid]:
 			# For each of that vertex's connected vertices...

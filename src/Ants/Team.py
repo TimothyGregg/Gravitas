@@ -1,4 +1,3 @@
-from Core.Vertex import Vertex
 from Ants.Base import Base
 from typing import Tuple
 from typing import Dict
@@ -31,90 +30,57 @@ class Team:
         # The game Graph
         self.board: AntBoard = board
 
-        # A dict of the vertices controlled by the Team
-        self.controlled_vertices: Dict[int, Vertex] = {}
+        # A dict of the Bases controlled by the Team
+        self.controlled_bases: Dict[int, Base] = {}
 
-        # A dict of the vertex UIDs adjacent to those controlled by the team
-        self.adjacent_vertices: Dict[int, List[int]] = {}
-
-        # A dict of the Bases that the Team operates on top of each controlled Vertex
-        self.bases: Dict[int, Base] = {}
-
-    def add_vertex(self, vertex: Vertex):
+    def add_base(self, base: Base):
         """
-        Add a Vertex to the dict of controlled vertices of this Team
+        Add a Base to the dict of controlled Bases of this Team
 
         Args:
-            vertex: The Vertex to be added to the dict of controlled Vertices
+            base: The Base to be added to the dict of controlled Bases
         """
 
-        if vertex.uid in self.controlled_vertices:
-            raise RuntimeError("add_vertex Error: Vertex " + str(vertex.uid) + " already controlled by Team " + str(
+        if base.uid in self.controlled_bases:
+            raise RuntimeError("add_base Error: Base " + str(base.uid) + " already controlled by Team " + str(
                 self.uid))
 
-        # Add the vertex to the list of controlled vertices for the Team
-        self.controlled_vertices[vertex.uid] = vertex
+        # Add the Base to the list of controlled Bases for the Team
+        self.controlled_bases[base.uid] = base
 
-        # Add the adjacency list of the new vertex to the dict of adjacent vertices
-        self.adjacent_vertices[vertex.uid] = self.board.adjacency_list[vertex.uid]
-
-        # Add a new Core at the vertex
-        self.bases[vertex.uid] = Base()
-
-    def remove_vertex(self, vertex):
+    def remove_base(self, base: Base):
         """
-        Remove a Vertex fom the dict of the controlled vertices of this Team
-        This also removes the Core from self.bases indiscriminately. Use with caution, as the Core will be removed
-        completely and left to garbage collection (boy howdy, unless I goof on references somewhere).
+        Remove a Base fom the dict of the controlled Bases of this Team
 
         Args:
-            vertex: The Vertex to remove from the dict of controlled Vertices
+            base: The Base to remove from the dict of controlled Bases
         """
 
-        # When given the vertex to remove directly
-        if type(vertex) == Vertex:
-            # Remove the vertex from controlled_vertices
+        # When given the Base to remove directly
+        if type(base) == Base:
+            # Remove the Base from controlled_bertices
             try:
-                del self.controlled_vertices[vertex.uid]
+                del self.controlled_bases[base.uid]
             except KeyError:
-                print("remove_vertex Error: Vertex " + str(vertex.uid) + " not controlled by Team " + str(self.uid))
-            # Remove the vertex from adjacent_vertices
-            try:
-                del self.adjacent_vertices[vertex.uid]
-            except KeyError:
-                print("remove_vertex Error: Vertex " + str(vertex.uid) + " not found in adjacency lists of Team " +
-                      str(self.uid))
-            # remove the Core from bases
-            try:
-                del self.bases[vertex.uid]
-            except KeyError:
-                print("No Core found in Team " + str(self.uid) + " for vertex " + str(vertex.uid))
+                print("remove_base Error: Base " + str(base.uid) + " not controlled by Team " + str(self.uid))
 
-        # When given the vertex to remove by it's uid
-        elif type(vertex) == int:
-            # Remove the vertex from controlled_vertices
+        # When given the Base to remove by it's uid
+        elif type(base) == int:
+            # Remove the Base from controlled_bertices
             try:
-                del self.controlled_vertices[vertex]
+                del self.controlled_bases[base]
             except KeyError:
-                print("remove_vertex Error: Vertex " + str(vertex.uid) + " not controlled by Team " + str(self.uid))
-            try:
-                del self.adjacent_vertices[vertex]
-            except KeyError:
-                print("remove_vertex Error: Vertex " + str(vertex) + " not found in adjacency lists of Team " +
-                      str(self.uid))
-            # Remove the Core from bases
-            try:
-                del self.bases[vertex]
-            except KeyError:
-                print("No Core found in Team " + str(self.uid) + " for vertex " + str(vertex))
+                print("remove_base Error: Base " + str(base) + " not controlled by Team " + str(self.uid))
+
+        # When we're handed junk
         else:
-            raise RuntimeError("Vertex to remove not given as a Vertex object or as a Vertex uid [int]")
+            raise RuntimeError("Base to remove not given as a Base object or as a Base uid [int]")
 
     def update(self):
         """
         Updates the Team by updating all elements thereof.
         """
 
-        # Update each Core in the Team
-        for vertex_id in self.bases:
-            self.bases[vertex_id].update()
+        # Update each Base in the Team
+        for base_id in self.controlled_bases:
+            self.controlled_bases[base_id].update()

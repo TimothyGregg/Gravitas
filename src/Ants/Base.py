@@ -1,7 +1,6 @@
 from typing import List
 
 
-# TODO Type-hint
 class Base:
     """
     Core objects serve as the base from which a Team will operate on top of a Vertex. TODO: Expand on this definition when it becomes applicable.

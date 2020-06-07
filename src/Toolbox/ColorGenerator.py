@@ -1,8 +1,9 @@
 from typing import Tuple
+from typing import Set
 import random
 
 
-# TODO Type-hint
+# TODO Make a Color class?
 # Dict containing named-color information
 color_dict = {
 	(26, 22, 22): "Background",
@@ -181,15 +182,15 @@ class ColorGenerator:
 		"""
 
 		# Set of checked-out colors for easy checked-out-ness checking
-		self.checked_out = set()
+		self.checked_out: Set[Tuple[int, int, int]] = set()
 
 		# Set of priority colors to return first
-		self.priority_colors = set()
+		self.priority_colors: Set[Tuple[int, int, int]] = set()
 		for color_tuple in color_dict["Fun"]:
 			self.priority_colors.add(color_tuple)
 
 		# Set of all available colors
-		self.available_colors = set()
+		self.available_colors: Set[Tuple[int, int, int]] = set()
 		# Build the available_colors set
 		# Iterate through the different color sets
 		for set_key in color_dict:
@@ -219,9 +220,14 @@ class ColorGenerator:
 			color_rgb: The RGB-value, ordered Tuple describing the color to check out from the available colors.
 		"""
 
+		# If the color tuple is already checked out, we goofed.
 		if color_rgb in self.checked_out:
 			raise RuntimeError("Color \"" + lookup(color_rgb) + "\" already checked out")
+
+		# Add the selected color tuple to the list of those checked out.
 		self.checked_out.add(color_rgb)
+
+		# Remove the color tuple form the two sets it may be a part of.
 		if color_rgb in self.priority_colors:
 			self.priority_colors.remove(color_rgb)
 		elif color_rgb in self.available_colors:
